@@ -27,35 +27,35 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; min-height: 100vh; }
-
+ 
   /* TOP BAR */
   .topbar { background: var(--green-dark); color: #fff; padding: 0 16px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
   .topbar-title { font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
   .topbar-actions { display: flex; gap: 8px; align-items: center; }
   .sheets-badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 600; background: rgba(255,255,255,0.15); color: #fff; cursor: pointer; }
   .sheets-badge.connected { background: #27AE60; }
-
+ 
   /* BOTTOM NAV */
   .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--white); border-top: 1px solid var(--border); display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
   .nav-btn { flex: 1; padding: 10px 4px 8px; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--text-muted); font-size: 10px; font-weight: 500; }
   .nav-btn.active { color: var(--green-mid); }
   .nav-icon { font-size: 22px; line-height: 1; }
-
+ 
   /* MAIN CONTENT */
   .page { display: none; padding: 16px 16px 100px; max-width: 680px; margin: 0 auto; }
   .page.active { display: block; }
-
+ 
   /* CARDS */
   .card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 14px; }
   .card-title { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
-
+ 
   /* STATS ROW */
   .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
   .stat-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 14px 12px; }
   .stat-label { font-size: 11px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
   .stat-val { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1; }
   .stat-unit { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-
+ 
   /* FUEL BAR */
   .fuel-bar-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 14px; }
   .fuel-bar-row { margin-bottom: 12px; }
@@ -68,7 +68,7 @@
   .fuel-fill.b1 { background: var(--green-mid); }
   .fuel-fill.b2 { background: var(--amber); }
   .fuel-warn { background: var(--red) !important; }
-
+ 
   /* FORM */
   .form-section { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 18px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
@@ -86,7 +86,7 @@
   .form-group textarea { resize: vertical; min-height: 70px; }
   .auto-field { background: var(--green-pale) !important; font-weight: 600; color: var(--green-dark) !important; }
   .hint { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-
+ 
   /* REFUEL TOGGLE */
   .refuel-box { background: var(--amber-pale); border: 1.5px solid #F0C060; border-radius: var(--radius); padding: 13px 14px; margin-bottom: 10px; }
   .toggle-row { display: flex; align-items: center; gap: 10px; cursor: pointer; }
@@ -97,7 +97,7 @@
   .refuel-qty-btn { flex: 1; padding: 9px 4px; border-radius: 8px; border: 1.5px solid #F0C060; background: #fff; font-size: 13px; font-weight: 600; color: var(--amber); cursor: pointer; transition: all 0.15s; }
   .refuel-qty-btn.active { background: var(--amber); color: #fff; border-color: var(--amber); }
   .refuel-qty-btn:active { opacity: 0.75; }
-
+ 
   /* BUTTONS */
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 20px; border-radius: 8px; font-size: 15px; font-weight: 600; border: none; cursor: pointer; transition: opacity 0.15s; }
   .btn:active { opacity: 0.75; }
@@ -106,12 +106,12 @@
   .btn-danger { background: var(--red-pale); color: var(--red); border: 1.5px solid #F5B7B1; }
   .btn-row { display: flex; gap: 10px; }
   .btn-row .btn { flex: 1; }
-
+ 
   /* TOAST */
   .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--green-dark); color: #fff; padding: 11px 20px; border-radius: 999px; font-size: 14px; font-weight: 500; z-index: 999; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,0.2); opacity: 0; pointer-events: none; transition: opacity 0.2s; }
   .toast.show { opacity: 1; }
   .toast.err { background: var(--red); }
-
+ 
   /* LOG LIST */
   .log-entry { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 13px 14px; margin-bottom: 10px; border-left: 4px solid var(--green-mid); cursor: pointer; }
   .log-entry.b2 { border-left-color: var(--amber); }
@@ -125,25 +125,25 @@
   .pill-b1 { background: var(--green-pale); color: var(--green-dark); }
   .pill-b2 { background: var(--amber-pale); color: var(--amber); }
   .pill-warn { background: var(--red-pale); color: var(--red); }
-
+ 
   /* FILTER BAR */
   .filter-bar { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
   .filter-btn { flex-shrink: 0; padding: 7px 14px; border-radius: 999px; border: 1.5px solid var(--border); background: var(--white); font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text-mid); }
   .filter-btn.active { background: var(--green-dark); color: #fff; border-color: var(--green-dark); }
-
+ 
   /* SUMMARY TABLE */
   .sum-table { width: 100%; border-collapse: collapse; font-size: 14px; }
   .sum-table th { text-align: left; padding: 8px 10px; background: var(--bg); font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
   .sum-table td { padding: 10px 10px; border-bottom: 1px solid var(--border); }
   .sum-table tr:last-child td { border-bottom: none; }
-
+ 
   /* SETTINGS */
   .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); }
   .settings-row:last-child { border-bottom: none; }
   .settings-label { font-size: 14px; font-weight: 600; }
   .settings-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
   .settings-action { color: var(--green-mid); font-size: 14px; font-weight: 600; cursor: pointer; }
-
+ 
   /* MODAL */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: flex-end; justify-content: center; }
   .modal-overlay.show { display: flex; }
@@ -151,20 +151,20 @@
   .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 18px; }
   .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
   .modal-close { float: right; font-size: 20px; cursor: pointer; color: var(--text-muted); line-height: 1; }
-
+ 
   /* EMPTY STATE */
   .empty { text-align: center; padding: 40px 20px; color: var(--text-muted); }
   .empty-icon { font-size: 44px; margin-bottom: 10px; }
   .empty-text { font-size: 15px; font-weight: 500; }
   .empty-sub { font-size: 13px; margin-top: 4px; }
-
+ 
   /* SECTION HEADER */
   .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
   .section-title { font-size: 17px; font-weight: 700; }
 </style>
 </head>
 <body>
-
+ 
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="topbar-title">
@@ -175,9 +175,9 @@
     <span class="sheets-badge" id="sheets-badge" onclick="showPage('settings')">● Sheets</span>
   </div>
 </div>
-
+ 
 <!-- PAGES -->
-
+ 
 <!-- HOME / DASHBOARD -->
 <div class="page active" id="page-home">
   <div style="padding-top:12px">
@@ -193,7 +193,7 @@
         <div class="stat-unit">Litres</div>
       </div>
     </div>
-
+ 
     <div class="fuel-bar-card">
       <div class="fuel-bar-row">
         <div class="fuel-bar-meta">
@@ -210,7 +210,7 @@
         <div class="fuel-track"><div class="fuel-fill b2" id="bar-b2" style="width:0%"></div></div>
       </div>
     </div>
-
+ 
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Entries today</div>
@@ -223,7 +223,7 @@
         <div class="stat-unit">all time</div>
       </div>
     </div>
-
+ 
     <div id="home-recent-wrap">
       <div class="section-header">
         <span class="section-title">Recent fills</span>
@@ -233,11 +233,11 @@
     </div>
   </div>
 </div>
-
+ 
 <!-- NEW ENTRY -->
 <div class="page" id="page-entry">
   <div style="padding-top:12px">
-
+ 
     <div class="form-section">Bowser &amp; date</div>
     <div class="form-row">
       <div class="form-group">
@@ -253,7 +253,7 @@
         <input type="date" id="e-date">
       </div>
     </div>
-
+ 
     <div class="form-section">Vehicle &amp; driver</div>
     <div class="form-row">
       <div class="form-group">
@@ -293,7 +293,7 @@
       </div>
       <div class="form-group"></div>
     </div>
-
+ 
     <div class="form-section">Meter readings</div>
     <div class="form-row">
       <div class="form-group">
@@ -319,7 +319,7 @@
         <span class="hint">Optional cross-check</span>
       </div>
     </div>
-
+ 
     <div class="form-section">Bowser refuel</div>
     <div class="refuel-box">
       <label class="toggle-row">
@@ -344,21 +344,21 @@
         </div>
       </div>
     </div>
-
+ 
     <div class="form-section">Notes</div>
     <div class="form-row single">
       <div class="form-group">
         <textarea id="e-notes" placeholder="Spillage, partial fill, meter reset, etc."></textarea>
       </div>
     </div>
-
+ 
     <button class="btn btn-primary" onclick="saveEntry()">💾 Save Entry</button>
     <div style="margin-top:10px">
       <button class="btn btn-secondary" style="width:100%" onclick="clearEntryForm()">Clear form</button>
     </div>
   </div>
 </div>
-
+ 
 <!-- LOG -->
 <div class="page" id="page-log">
   <div style="padding-top:12px">
@@ -371,18 +371,18 @@
     <div id="log-list"></div>
   </div>
 </div>
-
+ 
 <!-- SUMMARY -->
 <div class="page" id="page-summary">
   <div style="padding-top:12px">
     <div id="summary-content"></div>
   </div>
 </div>
-
+ 
 <!-- SETTINGS -->
 <div class="page" id="page-settings">
   <div style="padding-top:12px">
-
+ 
     <div class="card">
       <div class="card-title">Google Sheets sync</div>
       <div class="form-group" style="margin-bottom:12px">
@@ -397,7 +397,7 @@
       <button class="btn btn-secondary" style="width:100%;margin-top:10px" onclick="pullFromSheets()">🔄 Pull data from Google Sheets</button>
       <p class="hint" style="margin-top:6px">Use this on a new device to load all existing entries from your Sheet.</p>
     </div>
-
+ 
     <div class="card">
       <div class="card-title">Bowser settings</div>
       <div class="form-row">
@@ -422,7 +422,7 @@
       </div>
       <button class="btn btn-primary" onclick="saveSettings()">Save settings</button>
     </div>
-
+ 
     <div class="card">
       <div class="card-title">Drivers</div>
       <div id="driver-list-wrap"></div>
@@ -435,7 +435,7 @@
         </div>
       </div>
     </div>
-
+ 
     <div class="card">
       <div class="card-title">Data</div>
       <div style="display:flex;flex-direction:column;gap:10px">
@@ -445,7 +445,7 @@
         <button class="btn btn-danger" onclick="clearAll()">🗑 Clear all entries</button>
       </div>
     </div>
-
+ 
     <div class="card" id="setup-guide">
       <div class="card-title">Google Sheets setup guide</div>
       <div style="font-size:14px;line-height:1.7;color:var(--text-mid)">
@@ -466,7 +466,7 @@
     </div>
   </div>
 </div>
-
+ 
 <!-- BOTTOM NAV -->
 <div class="bottom-nav">
   <button class="nav-btn active" onclick="showPage('home')" id="nav-home">
@@ -490,7 +490,7 @@
     <span>Settings</span>
   </button>
 </div>
-
+ 
 <!-- ENTRY DETAIL MODAL -->
 <div class="modal-overlay" id="entry-modal">
   <div class="modal">
@@ -498,22 +498,22 @@
     <div id="modal-content"></div>
   </div>
 </div>
-
+ 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
-
+ 
 <script>
 // ─── APPS SCRIPT CODE (shown in setup guide) ────────────────────────────────
 const APPS_SCRIPT_CODE = `function doPost(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var data = JSON.parse(e.postData.contents);
   var action = data.action;
-
+ 
   if (action === 'ping') {
     return ContentService.createTextOutput(JSON.stringify({status:'ok'}))
       .setMimeType(ContentService.MimeType.JSON);
   }
-
+ 
   if (action === 'addEntry') {
     var sheet = ss.getSheetByName('Fuel Log') || ss.insertSheet('Fuel Log');
     if (sheet.getLastRow() === 0) {
@@ -533,7 +533,7 @@ const APPS_SCRIPT_CODE = `function doPost(e) {
     return ContentService.createTextOutput(JSON.stringify({status:'ok',row:rowNum}))
       .setMimeType(ContentService.MimeType.JSON);
   }
-
+ 
   if (action === 'syncAll') {
     var sheet = ss.getSheetByName('Fuel Log') || ss.insertSheet('Fuel Log');
     sheet.clearContents();
@@ -554,11 +554,11 @@ const APPS_SCRIPT_CODE = `function doPost(e) {
     return ContentService.createTextOutput(JSON.stringify({status:'ok',count:entries.length}))
       .setMimeType(ContentService.MimeType.JSON);
   }
-
+ 
   return ContentService.createTextOutput(JSON.stringify({status:'error',msg:'Unknown action'}))
     .setMimeType(ContentService.MimeType.JSON);
 }
-
+ 
 function doGet(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('Fuel Log');
@@ -588,34 +588,45 @@ function doGet(e) {
   return ContentService.createTextOutput(JSON.stringify({status:'ok',entries:entries}))
     .setMimeType(ContentService.MimeType.JSON);
 }`;
-
+ 
 document.getElementById('script-display').textContent = APPS_SCRIPT_CODE;
-
+ 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 const DEFAULT_STATE = {
   entries: [],
   settings: {
-    scriptUrl: '',
-    b1Base: 921.2,
-    b2Base: 800.4,
+    scriptUrl: 'https://script.google.com/macros/s/AKfycbx47ustEvFUbgqhQ5Y4Gv4m471zTgujabkIYfSH8DdxBdacGyfh74N686-WRWo4nd1S2g/exec',
+    b1Base: 0,
+    b2Base: 0,
     b1Cap: 1000,
     b2Cap: 1000
   },
   drivers: ['Willem','Sipho','Johan','Thabo','Andre']
 };
-
+ 
+// Ensure existing installs also get the URL if not already set
+if (!STATE.settings || !STATE.settings.scriptUrl) {
+  if (!STATE.settings) STATE.settings = {};
+  STATE.settings.scriptUrl = DEFAULT_STATE.settings.scriptUrl;
+  save();
+}
+ 
 let STATE = load();
+// Always ensure the script URL is set even on existing installs
+const HARDCODED_URL = 'https://script.google.com/macros/s/AKfycbx47ustEvFUbgqhQ5Y4Gv4m471zTgujabkIYfSH8DdxBdacGyfh74N686-WRWo4nd1S2g/exec';
+if (!STATE.settings) STATE.settings = {};
+if (!STATE.settings.scriptUrl) { STATE.settings.scriptUrl = HARDCODED_URL; save(); }
 let logFilter = 'all';
-
+ 
 function load() {
   try { return JSON.parse(localStorage.getItem('bowser_fuel_log')) || JSON.parse(JSON.stringify(DEFAULT_STATE)); }
   catch(e) { return JSON.parse(JSON.stringify(DEFAULT_STATE)); }
 }
-
+ 
 function save() {
   localStorage.setItem('bowser_fuel_log', JSON.stringify(STATE));
 }
-
+ 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -628,7 +639,7 @@ function showPage(name) {
   if (name === 'summary') renderSummary();
   if (name === 'settings') renderSettings();
 }
-
+ 
 // ─── FUEL CALC ────────────────────────────────────────────────────────────────
 function calcFuelLeft() {
   const s = STATE.settings;
@@ -641,7 +652,7 @@ function calcFuelLeft() {
   });
   return { b1: Math.max(0, b1), b2: Math.max(0, b2) };
 }
-
+ 
 // ─── HOME ─────────────────────────────────────────────────────────────────────
 function renderHome() {
   const { b1, b2 } = calcFuelLeft();
@@ -668,7 +679,7 @@ function renderHome() {
     : '<div class="empty"><div class="empty-icon">⛽</div><div class="empty-text">No entries yet</div><div class="empty-sub">Tap New Fill to log your first entry</div></div>';
   updateSheetsBadge();
 }
-
+ 
 function entryCard(e) {
   const incomplete = !e.meterStart || !e.meterEnd;
   const cls = incomplete ? 'incomplete' : e.bowser === 'B2' ? 'b2' : '';
@@ -687,20 +698,20 @@ function entryCard(e) {
     </div>
   </div>`;
 }
-
+ 
 // ─── ENTRY FORM ───────────────────────────────────────────────────────────────
 function initForm() {
   document.getElementById('e-date').value = new Date().toISOString().split('T')[0];
   renderDriverSelect();
 }
-
+ 
 function renderDriverSelect() {
   const sel = document.getElementById('e-driver');
   const cur = sel.value;
   sel.innerHTML = '<option value="">Select driver…</option>' +
     STATE.drivers.map(d => `<option${d === cur ? ' selected' : ''}>${d}</option>`).join('');
 }
-
+ 
 function onBowserChange() {
   const b = document.getElementById('e-bowser').value;
   if (!b) return;
@@ -711,12 +722,12 @@ function onBowserChange() {
     document.getElementById('e-amount').classList.add('auto-field');
   }
 }
-
+ 
 function onVehicleChange() {
   const v = document.getElementById('e-vehicle').value;
   document.getElementById('other-vehicle-row').style.display = v === '__other' ? 'block' : 'none';
 }
-
+ 
 function calcAmount() {
   const s = parseFloat(document.getElementById('e-start').value);
   const e = parseFloat(document.getElementById('e-end').value);
@@ -725,17 +736,17 @@ function calcAmount() {
     document.getElementById('e-amount').classList.add('auto-field');
   }
 }
-
+ 
 function onManualAmount() {
   document.getElementById('e-amount').classList.remove('auto-field');
 }
-
+ 
 function toggleRefuel() {
   const on = document.getElementById('e-refuel-toggle').checked;
   document.getElementById('refuel-sub').style.display = on ? 'block' : 'none';
   if (on) setRefuelQty('full');
 }
-
+ 
 function setRefuelQty(mode) {
   const bowser = document.getElementById('e-bowser').value;
   const cap = bowser === 'B2' ? (STATE.settings.b2Cap || 1000) : (STATE.settings.b1Cap || 1000);
@@ -757,14 +768,14 @@ function setRefuelQty(mode) {
     input.focus();
   }
 }
-
+ 
 function onRefuelManual() {
   ['rbtn-full','rbtn-half'].forEach(id => document.getElementById(id).classList.remove('active'));
   document.getElementById('rbtn-custom').classList.add('active');
 }
-
+ 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
-
+ 
 function saveEntry() {
   const bowser = document.getElementById('e-bowser').value;
   const date = document.getElementById('e-date').value;
@@ -773,12 +784,12 @@ function saveEntry() {
   if (!bowser) { toast('Please select a bowser', true); return; }
   if (!date) { toast('Please enter a date', true); return; }
   if (!vehicle) { toast('Please select a vehicle', true); return; }
-
+ 
   const meterStart = document.getElementById('e-start').value;
   const meterEnd = document.getElementById('e-end').value;
   const amount = document.getElementById('e-amount').value;
   const refuelOn = document.getElementById('e-refuel-toggle').checked;
-
+ 
   const entry = {
     id: uid(),
     bowser, date, vehicle,
@@ -793,17 +804,17 @@ function saveEntry() {
     notes: document.getElementById('e-notes').value.trim(),
     savedAt: new Date().toISOString()
   };
-
+ 
   STATE.entries.push(entry);
   save();
   toast('Entry saved ✓');
   clearEntryForm();
-
+ 
   if (STATE.settings.scriptUrl) {
     syncEntry(entry);
   }
 }
-
+ 
 function clearEntryForm() {
   ['e-bowser','e-vehicle','e-driver'].forEach(id => document.getElementById(id).value = '');
   ['e-start','e-end','e-amount','e-subtotal','e-notes','e-refuel-litres','e-refuel-ref','e-vehicle-other'].forEach(id => document.getElementById(id).value = '');
@@ -816,7 +827,7 @@ function clearEntryForm() {
   document.getElementById('other-vehicle-row').style.display = 'none';
   document.getElementById('e-amount').classList.add('auto-field');
 }
-
+ 
 // ─── LOG ──────────────────────────────────────────────────────────────────────
 function setFilter(f, btn) {
   logFilter = f;
@@ -824,7 +835,7 @@ function setFilter(f, btn) {
   btn.classList.add('active');
   renderLog();
 }
-
+ 
 function renderLog() {
   let list = [...STATE.entries].reverse();
   if (logFilter === 'B1') list = list.filter(e => e.bowser === 'B1');
@@ -834,7 +845,7 @@ function renderLog() {
     ? list.map(entryCard).join('')
     : '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No entries found</div></div>';
 }
-
+ 
 // ─── ENTRY DETAIL ─────────────────────────────────────────────────────────────
 function showEntry(id) {
   const e = STATE.entries.find(x => x.id === id);
@@ -864,11 +875,11 @@ function showEntry(id) {
     </div>`;
   document.getElementById('entry-modal').classList.add('show');
 }
-
+ 
 function detailRow(label, val) {
   return `<tr><td style="color:var(--text-muted);padding:7px 0;font-weight:500;width:45%">${label}</td><td style="padding:7px 0;font-weight:600;text-align:right">${val}</td></tr>`;
 }
-
+ 
 function deleteEntry(id) {
   if (!confirm('Delete this entry?')) return;
   STATE.entries = STATE.entries.filter(e => e.id !== id);
@@ -876,14 +887,14 @@ function deleteEntry(id) {
   if (logFilter !== 'all') renderLog(); else renderLog();
   toast('Entry deleted');
 }
-
+ 
 function closeModal() {
   document.getElementById('entry-modal').classList.remove('show');
 }
 document.getElementById('entry-modal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
-
+ 
 // ─── SUMMARY ──────────────────────────────────────────────────────────────────
 function renderSummary() {
   if (!STATE.entries.length) {
@@ -901,7 +912,7 @@ function renderSummary() {
     vMap[e.vehicle].total += parseFloat(e.amount) || 0;
   });
   const sorted = Object.entries(vMap).sort((a,b) => b[1].total - a[1].total);
-
+ 
   document.getElementById('summary-content').innerHTML = `
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-label">B1 dispensed</div><div class="stat-val">${totalB1.toFixed(0)}</div><div class="stat-unit">L total</div></div>
@@ -920,7 +931,7 @@ function renderSummary() {
       </table>
     </div>`;
 }
-
+ 
 // ─── SETTINGS ─────────────────────────────────────────────────────────────────
 function renderSettings() {
   const s = STATE.settings;
@@ -931,7 +942,7 @@ function renderSettings() {
   document.getElementById('s-b2-cap').value = s.b2Cap || '';
   renderDriverList();
 }
-
+ 
 function saveSettings() {
   STATE.settings.b1Base = parseFloat(document.getElementById('s-b1-base').value) || STATE.settings.b1Base;
   STATE.settings.b2Base = parseFloat(document.getElementById('s-b2-base').value) || STATE.settings.b2Base;
@@ -939,12 +950,12 @@ function saveSettings() {
   STATE.settings.b2Cap = parseFloat(document.getElementById('s-b2-cap').value) || STATE.settings.b2Cap;
   save(); toast('Settings saved ✓');
 }
-
+ 
 function saveScriptUrl() {
   STATE.settings.scriptUrl = document.getElementById('s-script-url').value.trim();
   save(); updateSheetsBadge(); toast('URL saved ✓');
 }
-
+ 
 function updateSheetsBadge() {
   const badge = document.getElementById('sheets-badge');
   if (STATE.settings.scriptUrl) {
@@ -953,7 +964,7 @@ function updateSheetsBadge() {
     badge.textContent = '● Sheets'; badge.classList.remove('connected');
   }
 }
-
+ 
 // ─── DRIVERS ─────────────────────────────────────────────────────────────────
 function renderDriverList() {
   document.getElementById('driver-list-wrap').innerHTML = STATE.drivers.length
@@ -963,7 +974,7 @@ function renderDriverList() {
       </div>`).join('')
     : '<p style="font-size:13px;color:var(--text-muted);padding:8px 0">No drivers added yet</p>';
 }
-
+ 
 function addDriver() {
   const name = document.getElementById('s-new-driver').value.trim();
   if (!name) return;
@@ -972,12 +983,12 @@ function addDriver() {
   save(); renderDriverList(); renderDriverSelect();
   toast('Driver added');
 }
-
+ 
 function removeDriver(i) {
   STATE.drivers.splice(i, 1);
   save(); renderDriverList(); renderDriverSelect();
 }
-
+ 
 // ─── GOOGLE SHEETS SYNC ───────────────────────────────────────────────────────
 async function syncEntry(entry) {
   const url = STATE.settings.scriptUrl;
@@ -990,7 +1001,7 @@ async function syncEntry(entry) {
     });
   } catch(e) {}
 }
-
+ 
 async function testSync() {
   const url = document.getElementById('s-script-url').value.trim();
   if (!url) { toast('Please enter your Apps Script URL first', true); return; }
@@ -1009,7 +1020,7 @@ async function testSync() {
     } else toast('Connection failed — check your script', true);
   } catch(e) { toast('Connection failed — check URL & permissions', true); }
 }
-
+ 
 async function pullFromSheets() {
   const url = STATE.settings.scriptUrl;
   if (!url) { toast('Please enter your Apps Script URL first', true); return; }
@@ -1037,7 +1048,7 @@ async function pullFromSheets() {
     toast('Pull failed — ' + err.message, true);
   }
 }
-
+ 
 async function syncAllToSheets() {
   const url = STATE.settings.scriptUrl;
   if (!url || !STATE.entries.length) return;
@@ -1049,7 +1060,7 @@ async function syncAllToSheets() {
     });
   } catch(e) {}
 }
-
+ 
 // ─── DATA EXPORT ──────────────────────────────────────────────────────────────
 function exportCSV() {
   const header = ['#','Date','Vehicle','Driver','Meter Start','Meter End','Amount (L)','Subtotal','Fuel Type','Bowser','Refuel (L)','Refuel Ref','Notes'];
@@ -1064,7 +1075,7 @@ function exportCSV() {
   a.click();
   toast('CSV exported ✓');
 }
-
+ 
 function exportJSON() {
   const a = document.createElement('a');
   a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(STATE));
@@ -1072,7 +1083,7 @@ function exportJSON() {
   a.click();
   toast('Backup saved ✓');
 }
-
+ 
 function importJSON() {
   const input = document.createElement('input');
   input.type = 'file'; input.accept = '.json';
@@ -1091,16 +1102,16 @@ function importJSON() {
   };
   input.click();
 }
-
+ 
 function clearAll() {
   if (!confirm('Delete ALL entries? This cannot be undone.')) return;
   STATE.entries = []; save(); renderHome(); toast('All entries cleared');
 }
-
+ 
 function copyScript() {
   navigator.clipboard.writeText(APPS_SCRIPT_CODE).then(() => toast('Script copied ✓')).catch(() => toast('Please copy manually from the box above', true));
 }
-
+ 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
 function formatDate(d) {
   if (!d) return '—';
@@ -1108,7 +1119,7 @@ function formatDate(d) {
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   return parts[2] + ' ' + months[parseInt(parts[1])-1] + ' ' + parts[0];
 }
-
+ 
 let toastTimer;
 function toast(msg, err) {
   const el = document.getElementById('toast');
@@ -1117,10 +1128,11 @@ function toast(msg, err) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
 }
-
+ 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 initForm();
 renderHome();
 </script>
 </body>
 </html>
+ 
