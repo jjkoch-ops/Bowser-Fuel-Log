@@ -394,6 +394,8 @@
         <button class="btn btn-secondary" onclick="testSync()">Test sync</button>
         <button class="btn btn-primary" style="margin-top:0" onclick="saveScriptUrl()">Save URL</button>
       </div>
+      <button class="btn btn-secondary" style="width:100%;margin-top:10px" onclick="pullFromSheets()">🔄 Pull data from Google Sheets</button>
+      <p class="hint" style="margin-top:6px">Use this on a new device to load all existing entries from your Sheet.</p>
     </div>
 
     <div class="card">
@@ -555,6 +557,36 @@ const APPS_SCRIPT_CODE = `function doPost(e) {
 
   return ContentService.createTextOutput(JSON.stringify({status:'error',msg:'Unknown action'}))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('Fuel Log');
+  if (!sheet || sheet.getLastRow() <= 1) {
+    return ContentService.createTextOutput(JSON.stringify({status:'ok',entries:[]}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 14).getValues();
+  var entries = rows.map(function(r, i) {
+    return {
+      id: 'sheet_' + (i + 1),
+      date: r[1] ? (r[1] instanceof Date ? r[1].toISOString().split('T')[0] : String(r[1])) : '',
+      vehicle: String(r[2] || ''),
+      driver: String(r[3] || ''),
+      meterStart: r[4] || '',
+      meterEnd: r[5] || '',
+      amount: r[6] || '',
+      subtotal: r[7] || '',
+      fuelType: String(r[8] || 'Diesel'),
+      bowser: String(r[9] || ''),
+      refuelLitres: r[10] || '',
+      refuelRef: String(r[11] || ''),
+      notes: String(r[12] || ''),
+      savedAt: String(r[13] || '')
+    };
+  }).filter(function(e) { return e.bowser === 'B1' || e.bowser === 'B2'; });
+  return ContentService.createTextOutput(JSON.stringify({status:'ok',entries:entries}))
+    .setMimeType(ContentService.MimeType.JSON);
 }`;
 
 document.getElementById('script-display').textContent = APPS_SCRIPT_CODE;
@@ -707,18 +739,15 @@ function toggleRefuel() {
 function setRefuelQty(mode) {
   const bowser = document.getElementById('e-bowser').value;
   const cap = bowser === 'B2' ? (STATE.settings.b2Cap || 1000) : (STATE.settings.b1Cap || 1000);
-  const { b1, b2 } = calcFuelLeft();
-  const fuelLeft = bowser === 'B2' ? b2 : b1;
-  const toFull = Math.max(0, cap - fuelLeft);
   const input = document.getElementById('e-refuel-litres');
   ['rbtn-full','rbtn-half','rbtn-custom'].forEach(id => document.getElementById(id).classList.remove('active'));
   document.getElementById('rbtn-' + mode).classList.add('active');
   if (mode === 'full') {
-    input.value = toFull.toFixed(1);
+    input.value = cap.toFixed(0);
     input.readOnly = true;
     input.classList.add('auto-field');
   } else if (mode === 'half') {
-    input.value = (toFull / 2).toFixed(1);
+    input.value = (cap / 2).toFixed(0);
     input.readOnly = true;
     input.classList.add('auto-field');
   } else {
@@ -979,6 +1008,34 @@ async function testSync() {
       syncAllToSheets();
     } else toast('Connection failed — check your script', true);
   } catch(e) { toast('Connection failed — check URL & permissions', true); }
+}
+
+async function pullFromSheets() {
+  const url = STATE.settings.scriptUrl;
+  if (!url) { toast('Please enter your Apps Script URL first', true); return; }
+  toast('Pulling from Google Sheets…');
+  try {
+    const res = await fetch(url, { method: 'GET' });
+    const data = await res.json();
+    if (data.status !== 'ok') { toast('Pull failed — check your script', true); return; }
+    const sheetsEntries = data.entries || [];
+    if (!sheetsEntries.length) { toast('No entries found in Sheet', true); return; }
+    // Merge: keep local entries not in sheet, add all sheet entries
+    const sheetIds = new Set(sheetsEntries.map(e => e.id));
+    const localOnly = STATE.entries.filter(e => !e.id.startsWith('sheet_'));
+    // Combine and deduplicate by id
+    const merged = [...sheetsEntries];
+    localOnly.forEach(e => { if (!sheetIds.has(e.id)) merged.push(e); });
+    merged.sort((a,b) => (a.date||'0000') < (b.date||'0000') ? -1 : 1);
+    STATE.entries = merged;
+    STATE.settings.b1Base = 0;
+    STATE.settings.b2Base = 0;
+    save();
+    renderHome();
+    toast('✓ Pulled ' + sheetsEntries.length + ' entries from Sheets');
+  } catch(err) {
+    toast('Pull failed — ' + err.message, true);
+  }
 }
 
 async function syncAllToSheets() {
