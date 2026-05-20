@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Bowser Fuel Log – Dagro Unite</title>
+<style>
+  :root {
+    --green-dark: #1A3A2A;
+    --green-mid: #2D5A3D;
+    --green-light: #3E7A52;
+    --green-pale: #E8F2EC;
+    --amber: #D4860A;
+    --amber-pale: #FDF3E3;
+    --red: #C0392B;
+    --red-pale: #FDECEA;
+    --blue: #1A6B9A;
+    --blue-pale: #E8F4FB;
+    --text: #1C1C1E;
+    --text-mid: #4A4A4A;
+    --text-muted: #888;
+    --border: #DDD;
+    --bg: #F5F5F5;
+    --white: #FFF;
+    --radius: 10px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; min-height: 100vh; }
+
+  /* TOP BAR */
+  .topbar { background: var(--green-dark); color: #fff; padding: 0 16px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .topbar-title { font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .topbar-actions { display: flex; gap: 8px; align-items: center; }
+  .sheets-badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 600; background: rgba(255,255,255,0.15); color: #fff; cursor: pointer; }
+  .sheets-badge.connected { background: #27AE60; }
+
+  /* BOTTOM NAV */
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--white); border-top: 1px solid var(--border); display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+  .nav-btn { flex: 1; padding: 10px 4px 8px; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--text-muted); font-size: 10px; font-weight: 500; }
+  .nav-btn.active { color: var(--green-mid); }
+  .nav-icon { font-size: 22px; line-height: 1; }
+
+  /* MAIN CONTENT */
+  .page { display: none; padding: 16px 16px 100px; max-width: 680px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 14px; }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+
+  /* STATS ROW */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 14px 12px; }
+  .stat-label { font-size: 11px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+  .stat-val { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1; }
+  .stat-unit { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  /* FUEL BAR */
+  .fuel-bar-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 14px; }
+  .fuel-bar-row { margin-bottom: 12px; }
+  .fuel-bar-row:last-child { margin-bottom: 0; }
+  .fuel-bar-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .fuel-bar-name { font-size: 13px; font-weight: 600; }
+  .fuel-bar-num { font-size: 13px; color: var(--text-mid); }
+  .fuel-track { height: 12px; background: var(--bg); border-radius: 999px; overflow: hidden; border: 1px solid var(--border); }
+  .fuel-fill { height: 100%; border-radius: 999px; transition: width 0.5s; }
+  .fuel-fill.b1 { background: var(--green-mid); }
+  .fuel-fill.b2 { background: var(--amber); }
+  .fuel-warn { background: var(--red) !important; }
+
+  /* FORM */
+  .form-section { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 18px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .form-row.single { grid-template-columns: 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label { font-size: 12px; font-weight: 600; color: var(--text-mid); }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 15px; font-family: inherit; color: var(--text); background: var(--white);
+    -webkit-appearance: none; appearance: none;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--green-mid); box-shadow: 0 0 0 3px rgba(45,90,61,0.12);
+  }
+  .form-group textarea { resize: vertical; min-height: 70px; }
+  .auto-field { background: var(--green-pale) !important; font-weight: 600; color: var(--green-dark) !important; }
+  .hint { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* REFUEL TOGGLE */
+  .refuel-box { background: var(--amber-pale); border: 1.5px solid #F0C060; border-radius: var(--radius); padding: 13px 14px; margin-bottom: 10px; }
+  .toggle-row { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .toggle-row input[type=checkbox] { width: 20px; height: 20px; cursor: pointer; accent-color: var(--amber); }
+  .toggle-label { font-size: 14px; font-weight: 600; color: var(--amber); }
+  .refuel-sub { display: none; margin-top: 12px; }
+  .refuel-sub .form-row { margin-bottom: 0; }
+  .refuel-qty-btn { flex: 1; padding: 9px 4px; border-radius: 8px; border: 1.5px solid #F0C060; background: #fff; font-size: 13px; font-weight: 600; color: var(--amber); cursor: pointer; transition: all 0.15s; }
+  .refuel-qty-btn.active { background: var(--amber); color: #fff; border-color: var(--amber); }
+  .refuel-qty-btn:active { opacity: 0.75; }
+
+  /* BUTTONS */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 20px; border-radius: 8px; font-size: 15px; font-weight: 600; border: none; cursor: pointer; transition: opacity 0.15s; }
+  .btn:active { opacity: 0.75; }
+  .btn-primary { background: var(--green-mid); color: #fff; width: 100%; margin-top: 6px; }
+  .btn-secondary { background: var(--bg); color: var(--text-mid); border: 1.5px solid var(--border); }
+  .btn-danger { background: var(--red-pale); color: var(--red); border: 1.5px solid #F5B7B1; }
+  .btn-row { display: flex; gap: 10px; }
+  .btn-row .btn { flex: 1; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--green-dark); color: #fff; padding: 11px 20px; border-radius: 999px; font-size: 14px; font-weight: 500; z-index: 999; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,0.2); opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .toast.show { opacity: 1; }
+  .toast.err { background: var(--red); }
+
+  /* LOG LIST */
+  .log-entry { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 13px 14px; margin-bottom: 10px; border-left: 4px solid var(--green-mid); cursor: pointer; }
+  .log-entry.b2 { border-left-color: var(--amber); }
+  .log-entry.incomplete { border-left-color: var(--red); background: var(--red-pale); }
+  .log-entry-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .log-vehicle { font-size: 15px; font-weight: 700; }
+  .log-amount { font-size: 17px; font-weight: 800; color: var(--green-mid); }
+  .log-amount.b2 { color: var(--amber); }
+  .log-meta { font-size: 12px; color: var(--text-muted); display: flex; gap: 10px; flex-wrap: wrap; }
+  .log-pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+  .pill-b1 { background: var(--green-pale); color: var(--green-dark); }
+  .pill-b2 { background: var(--amber-pale); color: var(--amber); }
+  .pill-warn { background: var(--red-pale); color: var(--red); }
+
+  /* FILTER BAR */
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
+  .filter-btn { flex-shrink: 0; padding: 7px 14px; border-radius: 999px; border: 1.5px solid var(--border); background: var(--white); font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text-mid); }
+  .filter-btn.active { background: var(--green-dark); color: #fff; border-color: var(--green-dark); }
+
+  /* SUMMARY TABLE */
+  .sum-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .sum-table th { text-align: left; padding: 8px 10px; background: var(--bg); font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .sum-table td { padding: 10px 10px; border-bottom: 1px solid var(--border); }
+  .sum-table tr:last-child td { border-bottom: none; }
+
+  /* SETTINGS */
+  .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-label { font-size: 14px; font-weight: 600; }
+  .settings-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .settings-action { color: var(--green-mid); font-size: 14px; font-weight: 600; cursor: pointer; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: flex-end; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: var(--white); border-radius: 20px 20px 0 0; padding: 20px 16px 40px; width: 100%; max-width: 680px; max-height: 92vh; overflow-y: auto; }
+  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 18px; }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+  .modal-close { float: right; font-size: 20px; cursor: pointer; color: var(--text-muted); line-height: 1; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+  .empty-icon { font-size: 44px; margin-bottom: 10px; }
+  .empty-text { font-size: 15px; font-weight: 500; }
+  .empty-sub { font-size: 13px; margin-top: 4px; }
+
+  /* SECTION HEADER */
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .section-title { font-size: 17px; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-title">
+    <span>⛽</span>
+    <span>Bowser Fuel Log</span>
+  </div>
+  <div class="topbar-actions">
+    <span class="sheets-badge" id="sheets-badge" onclick="showPage('settings')">● Sheets</span>
+  </div>
+</div>
+
+<!-- PAGES -->
+
+<!-- HOME / DASHBOARD -->
+<div class="page active" id="page-home">
+  <div style="padding-top:12px">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">B1 – Unite left</div>
+        <div class="stat-val" id="home-b1-left">—</div>
+        <div class="stat-unit">Litres</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">B2 – Dagro left</div>
+        <div class="stat-val" id="home-b2-left">—</div>
+        <div class="stat-unit">Litres</div>
+      </div>
+    </div>
+
+    <div class="fuel-bar-card">
+      <div class="fuel-bar-row">
+        <div class="fuel-bar-meta">
+          <span class="fuel-bar-name">🟢 B1 – Unite</span>
+          <span class="fuel-bar-num" id="bar-b1-txt">—</span>
+        </div>
+        <div class="fuel-track"><div class="fuel-fill b1" id="bar-b1" style="width:0%"></div></div>
+      </div>
+      <div class="fuel-bar-row">
+        <div class="fuel-bar-meta">
+          <span class="fuel-bar-name">🟡 B2 – Dagro</span>
+          <span class="fuel-bar-num" id="bar-b2-txt">—</span>
+        </div>
+        <div class="fuel-track"><div class="fuel-fill b2" id="bar-b2" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Entries today</div>
+        <div class="stat-val" id="home-today">0</div>
+        <div class="stat-unit">fills logged</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total entries</div>
+        <div class="stat-val" id="home-total">0</div>
+        <div class="stat-unit">all time</div>
+      </div>
+    </div>
+
+    <div id="home-recent-wrap">
+      <div class="section-header">
+        <span class="section-title">Recent fills</span>
+        <span style="font-size:13px;color:var(--green-mid);cursor:pointer;font-weight:600" onclick="showPage('log')">See all →</span>
+      </div>
+      <div id="home-recent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- NEW ENTRY -->
+<div class="page" id="page-entry">
+  <div style="padding-top:12px">
+
+    <div class="form-section">Bowser &amp; date</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Bowser ID *</label>
+        <select id="e-bowser" onchange="onBowserChange()">
+          <option value="">Select…</option>
+          <option value="B1">B1 – Unite</option>
+          <option value="B2">B2 – Dagro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Date *</label>
+        <input type="date" id="e-date">
+      </div>
+    </div>
+
+    <div class="form-section">Vehicle &amp; driver</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Vehicle *</label>
+        <select id="e-vehicle" onchange="onVehicleChange()">
+          <option value="">Select…</option>
+          <option>H100</option>
+          <option>Ranger</option>
+          <option>JJ-Mazda</option>
+          <option>Tata Truck</option>
+          <option>Bobcat</option>
+          <option>Bomag</option>
+          <option>Diesel Drum</option>
+          <option value="__other">Other…</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Driver</label>
+        <select id="e-driver">
+          <option value="">Select…</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row single" id="other-vehicle-row" style="display:none">
+      <div class="form-group">
+        <label>Vehicle name</label>
+        <input type="text" id="e-vehicle-other" placeholder="Enter vehicle name">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Fuel type</label>
+        <select id="e-fuel">
+          <option>Diesel</option>
+          <option>Petrol</option>
+        </select>
+      </div>
+      <div class="form-group"></div>
+    </div>
+
+    <div class="form-section">Meter readings</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Meter start (L) *</label>
+        <input type="number" id="e-start" inputmode="decimal" placeholder="e.g. 1083" oninput="calcAmount()">
+        <span class="hint">8-digit TOTAL reading</span>
+      </div>
+      <div class="form-group">
+        <label>Meter end (L) *</label>
+        <input type="number" id="e-end" inputmode="decimal" placeholder="e.g. 1133" oninput="calcAmount()">
+        <span class="hint">8-digit TOTAL reading</span>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Amount dispensed (L)</label>
+        <input type="number" id="e-amount" inputmode="decimal" placeholder="Auto-calculated" class="auto-field" oninput="onManualAmount()">
+        <span class="hint">Edit if meter was reset</span>
+      </div>
+      <div class="form-group">
+        <label>Subtotal reading</label>
+        <input type="number" id="e-subtotal" inputmode="decimal" placeholder="4-digit reading">
+        <span class="hint">Optional cross-check</span>
+      </div>
+    </div>
+
+    <div class="form-section">Bowser refuel</div>
+    <div class="refuel-box">
+      <label class="toggle-row">
+        <input type="checkbox" id="e-refuel-toggle" onchange="toggleRefuel()">
+        <span class="toggle-label">+ Bowser was refuelled</span>
+      </label>
+      <div class="refuel-sub" id="refuel-sub">
+        <div style="display:flex;gap:8px;margin-bottom:12px;margin-top:4px">
+          <button type="button" class="refuel-qty-btn" id="rbtn-full" onclick="setRefuelQty('full')">Full tank</button>
+          <button type="button" class="refuel-qty-btn" id="rbtn-half" onclick="setRefuelQty('half')">Half tank</button>
+          <button type="button" class="refuel-qty-btn" id="rbtn-custom" onclick="setRefuelQty('custom')">Custom</button>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Litres added</label>
+            <input type="number" id="e-refuel-litres" inputmode="decimal" placeholder="e.g. 1000" oninput="onRefuelManual()">
+          </div>
+          <div class="form-group">
+            <label>Supplier / invoice ref</label>
+            <input type="text" id="e-refuel-ref" placeholder="e.g. Engen #1234">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">Notes</div>
+    <div class="form-row single">
+      <div class="form-group">
+        <textarea id="e-notes" placeholder="Spillage, partial fill, meter reset, etc."></textarea>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveEntry()">💾 Save Entry</button>
+    <div style="margin-top:10px">
+      <button class="btn btn-secondary" style="width:100%" onclick="clearEntryForm()">Clear form</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOG -->
+<div class="page" id="page-log">
+  <div style="padding-top:12px">
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+      <button class="filter-btn" onclick="setFilter('B1',this)">B1 – Unite</button>
+      <button class="filter-btn" onclick="setFilter('B2',this)">B2 – Dagro</button>
+      <button class="filter-btn" onclick="setFilter('incomplete',this)">⚠ Incomplete</button>
+    </div>
+    <div id="log-list"></div>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div class="page" id="page-summary">
+  <div style="padding-top:12px">
+    <div id="summary-content"></div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="page" id="page-settings">
+  <div style="padding-top:12px">
+
+    <div class="card">
+      <div class="card-title">Google Sheets sync</div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Apps Script URL</label>
+        <input type="url" id="s-script-url" placeholder="https://script.google.com/macros/s/…/exec">
+        <span class="hint">Paste your deployment URL here — see setup guide below</span>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="testSync()">Test sync</button>
+        <button class="btn btn-primary" style="margin-top:0" onclick="saveScriptUrl()">Save URL</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Bowser settings</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>B1 opening stock (L)</label>
+          <input type="number" id="s-b1-base" inputmode="decimal" placeholder="921.2">
+        </div>
+        <div class="form-group">
+          <label>B2 opening stock (L)</label>
+          <input type="number" id="s-b2-base" inputmode="decimal" placeholder="800.4">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>B1 tank capacity (L)</label>
+          <input type="number" id="s-b1-cap" inputmode="decimal" placeholder="1000">
+        </div>
+        <div class="form-group">
+          <label>B2 tank capacity (L)</label>
+          <input type="number" id="s-b2-cap" inputmode="decimal" placeholder="1000">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="saveSettings()">Save settings</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Drivers</div>
+      <div id="driver-list-wrap"></div>
+      <div class="form-row" style="margin-top:10px">
+        <div class="form-group">
+          <input type="text" id="s-new-driver" placeholder="Add driver name…">
+        </div>
+        <div class="form-group" style="justify-content:flex-end">
+          <button class="btn btn-secondary" onclick="addDriver()">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Data</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn btn-secondary" onclick="exportCSV()">📥 Export as CSV</button>
+        <button class="btn btn-secondary" onclick="exportJSON()">📦 Backup data (JSON)</button>
+        <button class="btn btn-secondary" onclick="importJSON()">📂 Restore from backup</button>
+        <button class="btn btn-danger" onclick="clearAll()">🗑 Clear all entries</button>
+      </div>
+    </div>
+
+    <div class="card" id="setup-guide">
+      <div class="card-title">Google Sheets setup guide</div>
+      <div style="font-size:14px;line-height:1.7;color:var(--text-mid)">
+        <p style="margin-bottom:12px">Follow these steps once to connect the app to your Google Sheet. After that, every entry you save is automatically sent to Sheets — accessible on any device.</p>
+        <p style="font-weight:700;margin-bottom:4px">Step 1 — Create your Sheet</p>
+        <p style="margin-bottom:10px">Go to <strong>sheets.google.com</strong> and create a new blank spreadsheet. Name it <em>Bowser Fuel Log</em>.</p>
+        <p style="font-weight:700;margin-bottom:4px">Step 2 — Open Apps Script</p>
+        <p style="margin-bottom:10px">Inside your Sheet, click <strong>Extensions → Apps Script</strong>. A new tab opens.</p>
+        <p style="font-weight:700;margin-bottom:4px">Step 3 — Paste the script</p>
+        <p style="margin-bottom:8px">Delete everything in the editor and paste this entire script:</p>
+        <div style="background:#1C1C1E;color:#A8FF78;padding:14px;border-radius:8px;font-size:12px;font-family:monospace;overflow-x:auto;line-height:1.6;margin-bottom:10px" id="script-display"></div>
+        <button class="btn btn-secondary" style="width:100%;margin-bottom:12px" onclick="copyScript()">📋 Copy script to clipboard</button>
+        <p style="font-weight:700;margin-bottom:4px">Step 4 — Deploy as web app</p>
+        <p style="margin-bottom:10px">Click <strong>Deploy → New deployment</strong>. Set type to <em>Web app</em>, set <em>Execute as: Me</em>, set <em>Who has access: Anyone</em>. Click <strong>Deploy</strong> and copy the URL it gives you.</p>
+        <p style="font-weight:700;margin-bottom:4px">Step 5 — Paste URL above</p>
+        <p>Paste that URL into the <em>Apps Script URL</em> field above and click <strong>Save URL</strong>. Then tap <strong>Test sync</strong> — you should see a success message.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-btn active" onclick="showPage('home')" id="nav-home">
+    <span class="nav-icon">🏠</span>
+    <span>Home</span>
+  </button>
+  <button class="nav-btn" onclick="showPage('entry')" id="nav-entry">
+    <span class="nav-icon">➕</span>
+    <span>New Fill</span>
+  </button>
+  <button class="nav-btn" onclick="showPage('log')" id="nav-log">
+    <span class="nav-icon">📋</span>
+    <span>Log</span>
+  </button>
+  <button class="nav-btn" onclick="showPage('summary')" id="nav-summary">
+    <span class="nav-icon">📊</span>
+    <span>Summary</span>
+  </button>
+  <button class="nav-btn" onclick="showPage('settings')" id="nav-settings">
+    <span class="nav-icon">⚙️</span>
+    <span>Settings</span>
+  </button>
+</div>
+
+<!-- ENTRY DETAIL MODAL -->
+<div class="modal-overlay" id="entry-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── APPS SCRIPT CODE (shown in setup guide) ────────────────────────────────
+const APPS_SCRIPT_CODE = `function doPost(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var data = JSON.parse(e.postData.contents);
+  var action = data.action;
+
+  if (action === 'ping') {
+    return ContentService.createTextOutput(JSON.stringify({status:'ok'}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (action === 'addEntry') {
+    var sheet = ss.getSheetByName('Fuel Log') || ss.insertSheet('Fuel Log');
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(['#','Date','Vehicle','Driver','Meter Start','Meter End',
+        'Amount (L)','Subtotal','Fuel Type','Bowser','Refuel (L)',
+        'Refuel Ref','Notes','Timestamp']);
+      sheet.getRange(1,1,1,14).setFontWeight('bold')
+        .setBackground('#1A3A2A').setFontColor('#FFFFFF');
+      sheet.setFrozenRows(1);
+    }
+    var row = data.entry;
+    var rowNum = sheet.getLastRow();
+    sheet.appendRow([rowNum, row.date, row.vehicle, row.driver,
+      row.meterStart, row.meterEnd, row.amount, row.subtotal,
+      row.fuelType, row.bowser, row.refuelLitres, row.refuelRef,
+      row.notes, new Date().toISOString()]);
+    return ContentService.createTextOutput(JSON.stringify({status:'ok',row:rowNum}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (action === 'syncAll') {
+    var sheet = ss.getSheetByName('Fuel Log') || ss.insertSheet('Fuel Log');
+    sheet.clearContents();
+    sheet.appendRow(['#','Date','Vehicle','Driver','Meter Start','Meter End',
+      'Amount (L)','Subtotal','Fuel Type','Bowser','Refuel (L)',
+      'Refuel Ref','Notes','Timestamp']);
+    sheet.getRange(1,1,1,14).setFontWeight('bold')
+      .setBackground('#1A3A2A').setFontColor('#FFFFFF');
+    sheet.setFrozenRows(1);
+    var entries = data.entries;
+    for (var i = 0; i < entries.length; i++) {
+      var r = entries[i];
+      sheet.appendRow([i+1, r.date, r.vehicle, r.driver,
+        r.meterStart, r.meterEnd, r.amount, r.subtotal,
+        r.fuelType, r.bowser, r.refuelLitres, r.refuelRef,
+        r.notes, r.savedAt || '']);
+    }
+    return ContentService.createTextOutput(JSON.stringify({status:'ok',count:entries.length}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({status:'error',msg:'Unknown action'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+
+document.getElementById('script-display').textContent = APPS_SCRIPT_CODE;
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+const DEFAULT_STATE = {
+  entries: [],
+  settings: {
+    scriptUrl: '',
+    b1Base: 921.2,
+    b2Base: 800.4,
+    b1Cap: 1000,
+    b2Cap: 1000
+  },
+  drivers: ['Willem','Sipho','Johan','Thabo','Andre']
+};
+
+let STATE = load();
+let logFilter = 'all';
+
+function load() {
+  try { return JSON.parse(localStorage.getItem('bowser_fuel_log')) || JSON.parse(JSON.stringify(DEFAULT_STATE)); }
+  catch(e) { return JSON.parse(JSON.stringify(DEFAULT_STATE)); }
+}
+
+function save() {
+  localStorage.setItem('bowser_fuel_log', JSON.stringify(STATE));
+}
+
+// ─── NAV ──────────────────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const nb = document.getElementById('nav-' + name);
+  if (nb) nb.classList.add('active');
+  if (name === 'home') renderHome();
+  if (name === 'log') renderLog();
+  if (name === 'summary') renderSummary();
+  if (name === 'settings') renderSettings();
+}
+
+// ─── FUEL CALC ────────────────────────────────────────────────────────────────
+function calcFuelLeft() {
+  const s = STATE.settings;
+  let b1 = s.b1Base, b2 = s.b2Base;
+  STATE.entries.forEach(e => {
+    const amt = parseFloat(e.amount) || 0;
+    const ref = parseFloat(e.refuelLitres) || 0;
+    if (e.bowser === 'B1') { b1 = b1 - amt + ref; }
+    if (e.bowser === 'B2') { b2 = b2 - amt + ref; }
+  });
+  return { b1: Math.max(0, b1), b2: Math.max(0, b2) };
+}
+
+// ─── HOME ─────────────────────────────────────────────────────────────────────
+function renderHome() {
+  const { b1, b2 } = calcFuelLeft();
+  const s = STATE.settings;
+  document.getElementById('home-b1-left').textContent = b1.toFixed(0);
+  document.getElementById('home-b2-left').textContent = b2.toFixed(0);
+  const p1 = Math.min(100, (b1 / s.b1Cap) * 100);
+  const p2 = Math.min(100, (b2 / s.b2Cap) * 100);
+  const b1Fill = document.getElementById('bar-b1');
+  const b2Fill = document.getElementById('bar-b2');
+  b1Fill.style.width = p1 + '%';
+  b2Fill.style.width = p2 + '%';
+  b1Fill.classList.toggle('fuel-warn', p1 < 20);
+  b2Fill.classList.toggle('fuel-warn', p2 < 20);
+  document.getElementById('bar-b1-txt').textContent = b1.toFixed(0) + ' / ' + s.b1Cap + ' L';
+  document.getElementById('bar-b2-txt').textContent = b2.toFixed(0) + ' / ' + s.b2Cap + ' L';
+  const today = new Date().toISOString().split('T')[0];
+  const todayCount = STATE.entries.filter(e => e.date === today).length;
+  document.getElementById('home-today').textContent = todayCount;
+  document.getElementById('home-total').textContent = STATE.entries.length;
+  const recent = [...STATE.entries].reverse().slice(0, 5);
+  document.getElementById('home-recent').innerHTML = recent.length
+    ? recent.map(entryCard).join('')
+    : '<div class="empty"><div class="empty-icon">⛽</div><div class="empty-text">No entries yet</div><div class="empty-sub">Tap New Fill to log your first entry</div></div>';
+  updateSheetsBadge();
+}
+
+function entryCard(e) {
+  const incomplete = !e.meterStart || !e.meterEnd;
+  const cls = incomplete ? 'incomplete' : e.bowser === 'B2' ? 'b2' : '';
+  const amtCls = e.bowser === 'B2' ? 'log-amount b2' : 'log-amount';
+  return `<div class="log-entry ${cls}" onclick="showEntry('${e.id}')">
+    <div class="log-entry-top">
+      <span class="log-vehicle">${e.vehicle || '—'}</span>
+      <span class="${amtCls}">${e.amount ? e.amount + ' L' : '— L'}</span>
+    </div>
+    <div class="log-meta">
+      <span>${formatDate(e.date)}</span>
+      <span class="log-pill ${e.bowser === 'B1' ? 'pill-b1' : 'pill-b2'}">${e.bowser}</span>
+      ${e.driver ? '<span>' + e.driver + '</span>' : ''}
+      ${incomplete ? '<span class="log-pill pill-warn">⚠ Incomplete</span>' : ''}
+      ${e.refuelLitres ? '<span>🔃 Refuel +' + e.refuelLitres + 'L</span>' : ''}
+    </div>
+  </div>`;
+}
+
+// ─── ENTRY FORM ───────────────────────────────────────────────────────────────
+function initForm() {
+  document.getElementById('e-date').value = new Date().toISOString().split('T')[0];
+  renderDriverSelect();
+}
+
+function renderDriverSelect() {
+  const sel = document.getElementById('e-driver');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Select driver…</option>' +
+    STATE.drivers.map(d => `<option${d === cur ? ' selected' : ''}>${d}</option>`).join('');
+}
+
+function onBowserChange() {
+  const b = document.getElementById('e-bowser').value;
+  if (!b) return;
+  const last = [...STATE.entries].reverse().find(e => e.bowser === b);
+  if (last && last.meterEnd) {
+    document.getElementById('e-start').value = last.meterEnd;
+    document.getElementById('e-amount').value = '';
+    document.getElementById('e-amount').classList.add('auto-field');
+  }
+}
+
+function onVehicleChange() {
+  const v = document.getElementById('e-vehicle').value;
+  document.getElementById('other-vehicle-row').style.display = v === '__other' ? 'block' : 'none';
+}
+
+function calcAmount() {
+  const s = parseFloat(document.getElementById('e-start').value);
+  const e = parseFloat(document.getElementById('e-end').value);
+  if (!isNaN(s) && !isNaN(e) && e >= s) {
+    document.getElementById('e-amount').value = (e - s).toFixed(1);
+    document.getElementById('e-amount').classList.add('auto-field');
+  }
+}
+
+function onManualAmount() {
+  document.getElementById('e-amount').classList.remove('auto-field');
+}
+
+function toggleRefuel() {
+  const on = document.getElementById('e-refuel-toggle').checked;
+  document.getElementById('refuel-sub').style.display = on ? 'block' : 'none';
+  if (on) setRefuelQty('full');
+}
+
+function setRefuelQty(mode) {
+  const bowser = document.getElementById('e-bowser').value;
+  const cap = bowser === 'B2' ? (STATE.settings.b2Cap || 1000) : (STATE.settings.b1Cap || 1000);
+  const { b1, b2 } = calcFuelLeft();
+  const fuelLeft = bowser === 'B2' ? b2 : b1;
+  const toFull = Math.max(0, cap - fuelLeft);
+  const input = document.getElementById('e-refuel-litres');
+  ['rbtn-full','rbtn-half','rbtn-custom'].forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById('rbtn-' + mode).classList.add('active');
+  if (mode === 'full') {
+    input.value = toFull.toFixed(1);
+    input.readOnly = true;
+    input.classList.add('auto-field');
+  } else if (mode === 'half') {
+    input.value = (toFull / 2).toFixed(1);
+    input.readOnly = true;
+    input.classList.add('auto-field');
+  } else {
+    input.value = '';
+    input.readOnly = false;
+    input.classList.remove('auto-field');
+    input.focus();
+  }
+}
+
+function onRefuelManual() {
+  ['rbtn-full','rbtn-half'].forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById('rbtn-custom').classList.add('active');
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+function saveEntry() {
+  const bowser = document.getElementById('e-bowser').value;
+  const date = document.getElementById('e-date').value;
+  let vehicle = document.getElementById('e-vehicle').value;
+  if (vehicle === '__other') vehicle = document.getElementById('e-vehicle-other').value.trim();
+  if (!bowser) { toast('Please select a bowser', true); return; }
+  if (!date) { toast('Please enter a date', true); return; }
+  if (!vehicle) { toast('Please select a vehicle', true); return; }
+
+  const meterStart = document.getElementById('e-start').value;
+  const meterEnd = document.getElementById('e-end').value;
+  const amount = document.getElementById('e-amount').value;
+  const refuelOn = document.getElementById('e-refuel-toggle').checked;
+
+  const entry = {
+    id: uid(),
+    bowser, date, vehicle,
+    driver: document.getElementById('e-driver').value,
+    meterStart: meterStart ? parseFloat(meterStart) : '',
+    meterEnd: meterEnd ? parseFloat(meterEnd) : '',
+    amount: amount ? parseFloat(amount) : '',
+    subtotal: document.getElementById('e-subtotal').value || '',
+    fuelType: document.getElementById('e-fuel').value,
+    refuelLitres: refuelOn ? (document.getElementById('e-refuel-litres').value || '') : '',
+    refuelRef: refuelOn ? document.getElementById('e-refuel-ref').value : '',
+    notes: document.getElementById('e-notes').value.trim(),
+    savedAt: new Date().toISOString()
+  };
+
+  STATE.entries.push(entry);
+  save();
+  toast('Entry saved ✓');
+  clearEntryForm();
+
+  if (STATE.settings.scriptUrl) {
+    syncEntry(entry);
+  }
+}
+
+function clearEntryForm() {
+  ['e-bowser','e-vehicle','e-driver'].forEach(id => document.getElementById(id).value = '');
+  ['e-start','e-end','e-amount','e-subtotal','e-notes','e-refuel-litres','e-refuel-ref','e-vehicle-other'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('e-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('e-refuel-toggle').checked = false;
+  document.getElementById('refuel-sub').style.display = 'none';
+  document.getElementById('e-refuel-litres').readOnly = false;
+  document.getElementById('e-refuel-litres').classList.remove('auto-field');
+  ['rbtn-full','rbtn-half','rbtn-custom'].forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById('other-vehicle-row').style.display = 'none';
+  document.getElementById('e-amount').classList.add('auto-field');
+}
+
+// ─── LOG ──────────────────────────────────────────────────────────────────────
+function setFilter(f, btn) {
+  logFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLog();
+}
+
+function renderLog() {
+  let list = [...STATE.entries].reverse();
+  if (logFilter === 'B1') list = list.filter(e => e.bowser === 'B1');
+  else if (logFilter === 'B2') list = list.filter(e => e.bowser === 'B2');
+  else if (logFilter === 'incomplete') list = list.filter(e => !e.meterStart || !e.meterEnd);
+  document.getElementById('log-list').innerHTML = list.length
+    ? list.map(entryCard).join('')
+    : '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No entries found</div></div>';
+}
+
+// ─── ENTRY DETAIL ─────────────────────────────────────────────────────────────
+function showEntry(id) {
+  const e = STATE.entries.find(x => x.id === id);
+  if (!e) return;
+  document.getElementById('modal-content').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+      <div>
+        <div style="font-size:20px;font-weight:800">${e.vehicle}</div>
+        <div style="font-size:13px;color:var(--text-muted)">${formatDate(e.date)} · <span class="log-pill ${e.bowser==='B1'?'pill-b1':'pill-b2'}">${e.bowser}</span></div>
+      </div>
+      <div style="font-size:26px;font-weight:800;color:${e.bowser==='B1'?'var(--green-mid)':'var(--amber)'}">${e.amount ? e.amount + ' L' : '—'}</div>
+    </div>
+    <table style="width:100%;font-size:14px;border-collapse:collapse">
+      ${detailRow('Meter start', e.meterStart || '—')}
+      ${detailRow('Meter end', e.meterEnd || '—')}
+      ${detailRow('Amount', e.amount ? e.amount + ' L' : '—')}
+      ${detailRow('Fuel type', e.fuelType)}
+      ${e.driver ? detailRow('Driver', e.driver) : ''}
+      ${e.subtotal ? detailRow('Subtotal reading', e.subtotal) : ''}
+      ${e.refuelLitres ? detailRow('Refuel added', e.refuelLitres + ' L') : ''}
+      ${e.refuelRef ? detailRow('Refuel ref', e.refuelRef) : ''}
+      ${e.notes ? detailRow('Notes', e.notes) : ''}
+    </table>
+    <div style="margin-top:16px;display:flex;gap:10px">
+      <button class="btn btn-danger" style="flex:1" onclick="deleteEntry('${e.id}')">🗑 Delete</button>
+      <button class="btn btn-secondary" style="flex:1" onclick="closeModal()">Close</button>
+    </div>`;
+  document.getElementById('entry-modal').classList.add('show');
+}
+
+function detailRow(label, val) {
+  return `<tr><td style="color:var(--text-muted);padding:7px 0;font-weight:500;width:45%">${label}</td><td style="padding:7px 0;font-weight:600;text-align:right">${val}</td></tr>`;
+}
+
+function deleteEntry(id) {
+  if (!confirm('Delete this entry?')) return;
+  STATE.entries = STATE.entries.filter(e => e.id !== id);
+  save(); closeModal();
+  if (logFilter !== 'all') renderLog(); else renderLog();
+  toast('Entry deleted');
+}
+
+function closeModal() {
+  document.getElementById('entry-modal').classList.remove('show');
+}
+document.getElementById('entry-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ─── SUMMARY ──────────────────────────────────────────────────────────────────
+function renderSummary() {
+  if (!STATE.entries.length) {
+    document.getElementById('summary-content').innerHTML = '<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No data yet</div><div class="empty-sub">Save entries to see your summary</div></div>';
+    return;
+  }
+  const { b1, b2 } = calcFuelLeft();
+  const totalB1 = STATE.entries.filter(e => e.bowser === 'B1').reduce((s,e) => s + (parseFloat(e.amount)||0), 0);
+  const totalB2 = STATE.entries.filter(e => e.bowser === 'B2').reduce((s,e) => s + (parseFloat(e.amount)||0), 0);
+  const vMap = {};
+  STATE.entries.forEach(e => {
+    if (!e.vehicle) return;
+    if (!vMap[e.vehicle]) vMap[e.vehicle] = { fills: 0, total: 0 };
+    vMap[e.vehicle].fills++;
+    vMap[e.vehicle].total += parseFloat(e.amount) || 0;
+  });
+  const sorted = Object.entries(vMap).sort((a,b) => b[1].total - a[1].total);
+
+  document.getElementById('summary-content').innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">B1 dispensed</div><div class="stat-val">${totalB1.toFixed(0)}</div><div class="stat-unit">L total</div></div>
+      <div class="stat-card"><div class="stat-label">B2 dispensed</div><div class="stat-val">${totalB2.toFixed(0)}</div><div class="stat-unit">L total</div></div>
+    </div>
+    <div class="card" style="margin-top:0">
+      <div class="card-title">By vehicle</div>
+      <table class="sum-table">
+        <thead><tr><th>Vehicle</th><th>Fills</th><th>Total (L)</th><th>Avg (L)</th></tr></thead>
+        <tbody>${sorted.map(([v,d]) => `<tr>
+          <td style="font-weight:700">${v}</td>
+          <td>${d.fills}</td>
+          <td style="font-weight:700">${d.total.toFixed(0)}</td>
+          <td style="color:var(--text-muted)">${(d.total/d.fills).toFixed(1)}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+// ─── SETTINGS ─────────────────────────────────────────────────────────────────
+function renderSettings() {
+  const s = STATE.settings;
+  document.getElementById('s-script-url').value = s.scriptUrl || '';
+  document.getElementById('s-b1-base').value = s.b1Base || '';
+  document.getElementById('s-b2-base').value = s.b2Base || '';
+  document.getElementById('s-b1-cap').value = s.b1Cap || '';
+  document.getElementById('s-b2-cap').value = s.b2Cap || '';
+  renderDriverList();
+}
+
+function saveSettings() {
+  STATE.settings.b1Base = parseFloat(document.getElementById('s-b1-base').value) || STATE.settings.b1Base;
+  STATE.settings.b2Base = parseFloat(document.getElementById('s-b2-base').value) || STATE.settings.b2Base;
+  STATE.settings.b1Cap = parseFloat(document.getElementById('s-b1-cap').value) || STATE.settings.b1Cap;
+  STATE.settings.b2Cap = parseFloat(document.getElementById('s-b2-cap').value) || STATE.settings.b2Cap;
+  save(); toast('Settings saved ✓');
+}
+
+function saveScriptUrl() {
+  STATE.settings.scriptUrl = document.getElementById('s-script-url').value.trim();
+  save(); updateSheetsBadge(); toast('URL saved ✓');
+}
+
+function updateSheetsBadge() {
+  const badge = document.getElementById('sheets-badge');
+  if (STATE.settings.scriptUrl) {
+    badge.textContent = '● Sheets ON'; badge.classList.add('connected');
+  } else {
+    badge.textContent = '● Sheets'; badge.classList.remove('connected');
+  }
+}
+
+// ─── DRIVERS ─────────────────────────────────────────────────────────────────
+function renderDriverList() {
+  document.getElementById('driver-list-wrap').innerHTML = STATE.drivers.length
+    ? STATE.drivers.map((d,i) => `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:14px">${d}</span>
+        <button class="btn btn-danger" style="padding:5px 12px;font-size:12px" onclick="removeDriver(${i})">Remove</button>
+      </div>`).join('')
+    : '<p style="font-size:13px;color:var(--text-muted);padding:8px 0">No drivers added yet</p>';
+}
+
+function addDriver() {
+  const name = document.getElementById('s-new-driver').value.trim();
+  if (!name) return;
+  STATE.drivers.push(name);
+  document.getElementById('s-new-driver').value = '';
+  save(); renderDriverList(); renderDriverSelect();
+  toast('Driver added');
+}
+
+function removeDriver(i) {
+  STATE.drivers.splice(i, 1);
+  save(); renderDriverList(); renderDriverSelect();
+}
+
+// ─── GOOGLE SHEETS SYNC ───────────────────────────────────────────────────────
+async function syncEntry(entry) {
+  const url = STATE.settings.scriptUrl;
+  if (!url) return;
+  try {
+    await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'addEntry', entry }),
+      headers: { 'Content-Type': 'text/plain' }
+    });
+  } catch(e) {}
+}
+
+async function testSync() {
+  const url = document.getElementById('s-script-url').value.trim();
+  if (!url) { toast('Please enter your Apps Script URL first', true); return; }
+  toast('Testing connection…');
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'ping' }),
+      headers: { 'Content-Type': 'text/plain' }
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      STATE.settings.scriptUrl = url; save(); updateSheetsBadge();
+      toast('Connected to Google Sheets ✓');
+      syncAllToSheets();
+    } else toast('Connection failed — check your script', true);
+  } catch(e) { toast('Connection failed — check URL & permissions', true); }
+}
+
+async function syncAllToSheets() {
+  const url = STATE.settings.scriptUrl;
+  if (!url || !STATE.entries.length) return;
+  try {
+    await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'syncAll', entries: STATE.entries }),
+      headers: { 'Content-Type': 'text/plain' }
+    });
+  } catch(e) {}
+}
+
+// ─── DATA EXPORT ──────────────────────────────────────────────────────────────
+function exportCSV() {
+  const header = ['#','Date','Vehicle','Driver','Meter Start','Meter End','Amount (L)','Subtotal','Fuel Type','Bowser','Refuel (L)','Refuel Ref','Notes'];
+  const rows = STATE.entries.map((e,i) => [
+    i+1, e.date, e.vehicle, e.driver, e.meterStart, e.meterEnd,
+    e.amount, e.subtotal, e.fuelType, e.bowser, e.refuelLitres, e.refuelRef, e.notes
+  ].map(v => '"' + (v||'') + '"').join(','));
+  const csv = [header.join(','), ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'bowser-fuel-log-' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+  toast('CSV exported ✓');
+}
+
+function exportJSON() {
+  const a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(STATE));
+  a.download = 'bowser-fuel-backup-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  toast('Backup saved ✓');
+}
+
+function importJSON() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json';
+  input.onchange = e => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (data.entries && data.settings) {
+          STATE = data; save(); renderHome();
+          toast('Data restored ✓');
+        } else toast('Invalid backup file', true);
+      } catch(e) { toast('Could not read file', true); }
+    };
+    reader.readAsText(e.target.files[0]);
+  };
+  input.click();
+}
+
+function clearAll() {
+  if (!confirm('Delete ALL entries? This cannot be undone.')) return;
+  STATE.entries = []; save(); renderHome(); toast('All entries cleared');
+}
+
+function copyScript() {
+  navigator.clipboard.writeText(APPS_SCRIPT_CODE).then(() => toast('Script copied ✓')).catch(() => toast('Please copy manually from the box above', true));
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+function formatDate(d) {
+  if (!d) return '—';
+  const parts = d.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return parts[2] + ' ' + months[parseInt(parts[1])-1] + ' ' + parts[0];
+}
+
+let toastTimer;
+function toast(msg, err) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (err ? ' err' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+initForm();
+renderHome();
+</script>
+</body>
+</html>
