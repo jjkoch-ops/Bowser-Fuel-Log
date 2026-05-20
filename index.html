@@ -604,20 +604,7 @@ const DEFAULT_STATE = {
   drivers: ['Willem','Sipho','Johan','Thabo','Andre']
 };
 
-// Ensure existing installs also get the URL if not already set
-if (!STATE.settings || !STATE.settings.scriptUrl) {
-  if (!STATE.settings) STATE.settings = {};
-  STATE.settings.scriptUrl = DEFAULT_STATE.settings.scriptUrl;
-  save();
-}
-
-let STATE = load();
-// Always force the hardcoded URL — overrides whatever is in localStorage
 const HARDCODED_URL = 'https://script.google.com/macros/s/AKfycbx47ustEvFUbgqhQ5Y4Gv4m471zTgujabkIYfSH8DdxBdacGyfh74N686-WRWo4nd1S2g/exec';
-if (!STATE.settings) STATE.settings = {};
-STATE.settings.scriptUrl = HARDCODED_URL;
-save();
-let logFilter = 'all';
 
 function load() {
   try { return JSON.parse(localStorage.getItem('bowser_fuel_log')) || JSON.parse(JSON.stringify(DEFAULT_STATE)); }
@@ -627,6 +614,13 @@ function load() {
 function save() {
   localStorage.setItem('bowser_fuel_log', JSON.stringify(STATE));
 }
+
+let STATE = load();
+// Always force hardcoded URL regardless of what is in localStorage
+if (!STATE.settings) STATE.settings = {};
+STATE.settings.scriptUrl = HARDCODED_URL;
+save();
+let logFilter = 'all';
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
 function showPage(name) {
@@ -1130,6 +1124,7 @@ function toast(msg, err) {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 initForm();
 renderHome();
+updateSheetsBadge();
 
 // Auto-pull from Sheets on load (silent, no toast unless new entries found)
 async function autoPullFromSheets(silent) {
