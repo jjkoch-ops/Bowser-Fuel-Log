@@ -612,10 +612,11 @@ if (!STATE.settings || !STATE.settings.scriptUrl) {
 }
 
 let STATE = load();
-// Always ensure the script URL is set even on existing installs
+// Always force the hardcoded URL — overrides whatever is in localStorage
 const HARDCODED_URL = 'https://script.google.com/macros/s/AKfycbx47ustEvFUbgqhQ5Y4Gv4m471zTgujabkIYfSH8DdxBdacGyfh74N686-WRWo4nd1S2g/exec';
 if (!STATE.settings) STATE.settings = {};
-if (!STATE.settings.scriptUrl) { STATE.settings.scriptUrl = HARDCODED_URL; save(); }
+STATE.settings.scriptUrl = HARDCODED_URL;
+save();
 let logFilter = 'all';
 
 function load() {
