@@ -402,11 +402,11 @@
       <div class="card-title">Bowser settings</div>
       <div class="form-row">
         <div class="form-group">
-          <label>B1 opening stock (L)</label>
+          <label>B1 opening stock (L) — keep at 0</label>
           <input type="number" id="s-b1-base" inputmode="decimal" placeholder="921.2">
         </div>
         <div class="form-group">
-          <label>B2 opening stock (L)</label>
+          <label>B2 opening stock (L) — keep at 0</label>
           <input type="number" id="s-b2-base" inputmode="decimal" placeholder="800.4">
         </div>
       </div>
@@ -619,6 +619,8 @@ let STATE = load();
 // Always force hardcoded URL regardless of what is in localStorage
 if (!STATE.settings) STATE.settings = {};
 STATE.settings.scriptUrl = HARDCODED_URL;
+STATE.settings.b1Base = 0;
+STATE.settings.b2Base = 0;
 save();
 let logFilter = 'all';
 
@@ -645,25 +647,28 @@ function calcFuelLeft() {
     if (e.bowser === 'B1') { b1 = b1 - amt + ref; }
     if (e.bowser === 'B2') { b2 = b2 - amt + ref; }
   });
-  return { b1: Math.max(0, b1), b2: Math.max(0, b2) };
+  return { b1: Math.round(b1 * 10) / 10, b2: Math.round(b2 * 10) / 10 };
 }
 
 // ─── HOME ─────────────────────────────────────────────────────────────────────
 function renderHome() {
   const { b1, b2 } = calcFuelLeft();
   const s = STATE.settings;
-  document.getElementById('home-b1-left').textContent = b1.toFixed(0);
-  document.getElementById('home-b2-left').textContent = b2.toFixed(0);
-  const p1 = Math.min(100, (b1 / s.b1Cap) * 100);
-  const p2 = Math.min(100, (b2 / s.b2Cap) * 100);
+  document.getElementById('home-b1-left').textContent = b1.toFixed(1);
+  document.getElementById('home-b2-left').textContent = b2.toFixed(1);
+  // Use actual balance as cap if it exceeds tank capacity (e.g. after refuel)
+  const b1Cap = Math.max(s.b1Cap, b1);
+  const b2Cap = Math.max(s.b2Cap, b2);
+  const p1 = Math.min(100, (b1 / b1Cap) * 100);
+  const p2 = Math.min(100, (b2 / b2Cap) * 100);
   const b1Fill = document.getElementById('bar-b1');
   const b2Fill = document.getElementById('bar-b2');
   b1Fill.style.width = p1 + '%';
   b2Fill.style.width = p2 + '%';
-  b1Fill.classList.toggle('fuel-warn', p1 < 20);
-  b2Fill.classList.toggle('fuel-warn', p2 < 20);
-  document.getElementById('bar-b1-txt').textContent = b1.toFixed(0) + ' / ' + s.b1Cap + ' L';
-  document.getElementById('bar-b2-txt').textContent = b2.toFixed(0) + ' / ' + s.b2Cap + ' L';
+  b1Fill.classList.toggle('fuel-warn', b1 < 200);
+  b2Fill.classList.toggle('fuel-warn', b2 < 200);
+  document.getElementById('bar-b1-txt').textContent = b1.toFixed(1) + ' L remaining';
+  document.getElementById('bar-b2-txt').textContent = b2.toFixed(1) + ' L remaining';
   const today = new Date().toISOString().split('T')[0];
   const todayCount = STATE.entries.filter(e => e.date === today).length;
   document.getElementById('home-today').textContent = todayCount;
@@ -985,21 +990,9 @@ function removeDriver(i) {
 }
 
 // ─── GOOGLE SHEETS SYNC ───────────────────────────────────────────────────────
-async function syncEntry(entry) {
-  const url = STATE.settings.scriptUrl;
-  if (!url) return;
-  try {
-    await fetch(url, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'addEntry', entry }),
-      headers: { 'Content-Type': 'text/plain' }
-    });
-  } catch(e) {}
-}
-
 async function testSync() {
-  const url = document.getElementById('s-script-url').value.trim();
-  if (!url) { toast('Please enter your Apps Script URL first', true); return; }
+  const url = document.getElementById('s-script-url').value.trim() || STATE.settings.scriptUrl;
+  if (!url) { toast('No Apps Script URL found', true); return; }
   toast('Testing connection…');
   try {
     const res = await fetch(url, {
@@ -1011,36 +1004,35 @@ async function testSync() {
     if (data.status === 'ok') {
       STATE.settings.scriptUrl = url; save(); updateSheetsBadge();
       toast('Connected to Google Sheets ✓');
-      syncAllToSheets();
     } else toast('Connection failed — check your script', true);
   } catch(e) { toast('Connection failed — check URL & permissions', true); }
 }
 
+// Pull from Sheets and REPLACE local data — Sheets is master
 async function pullFromSheets() {
   const url = STATE.settings.scriptUrl;
-  if (!url) { toast('Please enter your Apps Script URL first', true); return; }
-  toast('Pulling from Google Sheets…');
+  if (!url) { toast('No Apps Script URL set', true); return; }
+  toast('Syncing from Google Sheets…');
   try {
     const res = await fetch(url, { method: 'GET' });
     const data = await res.json();
-    if (data.status !== 'ok') { toast('Pull failed — check your script', true); return; }
+    if (data.status !== 'ok') { toast('Sync failed — check your script', true); return; }
     const sheetsEntries = data.entries || [];
     if (!sheetsEntries.length) { toast('No entries found in Sheet', true); return; }
-    // Merge: add sheet entries not already in local storage
-    const existingIds = new Set(STATE.entries.map(e => e.id));
-    const newEntries = sheetsEntries.filter(e => !existingIds.has(e.id));
-    STATE.entries = [...STATE.entries, ...newEntries];
+    // Sheets is master — replace local with sheet data
+    STATE.entries = sheetsEntries;
     STATE.entries.sort((a,b) => (a.date||'0000') < (b.date||'0000') ? -1 : 1);
     STATE.settings.b1Base = 0;
     STATE.settings.b2Base = 0;
     save();
     renderHome();
-    toast('✓ Pulled ' + newEntries.length + ' new entries from Sheets');
+    toast('✓ Synced ' + sheetsEntries.length + ' entries from Sheets');
   } catch(err) {
-    toast('Pull failed — ' + err.message, true);
+    toast('Sync failed — ' + err.message, true);
   }
 }
 
+// Push all local entries to Sheets
 async function syncAllToSheets() {
   const url = STATE.settings.scriptUrl;
   if (!url || !STATE.entries.length) return;
@@ -1048,6 +1040,19 @@ async function syncAllToSheets() {
     await fetch(url, {
       method: 'POST',
       body: JSON.stringify({ action: 'syncAll', entries: STATE.entries }),
+      headers: { 'Content-Type': 'text/plain' }
+    });
+  } catch(e) {}
+}
+
+// Push single entry to Sheets
+async function syncEntry(entry) {
+  const url = STATE.settings.scriptUrl;
+  if (!url) return;
+  try {
+    await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'addEntry', entry }),
       headers: { 'Content-Type': 'text/plain' }
     });
   } catch(e) {}
@@ -1126,7 +1131,7 @@ initForm();
 renderHome();
 updateSheetsBadge();
 
-// Auto-pull from Sheets on load (silent, no toast unless new entries found)
+// Auto-pull from Sheets — Sheets is always master
 async function autoPullFromSheets(silent) {
   const url = STATE.settings.scriptUrl;
   if (!url) return;
@@ -1136,18 +1141,14 @@ async function autoPullFromSheets(silent) {
     if (data.status !== 'ok') return;
     const sheetsEntries = data.entries || [];
     if (!sheetsEntries.length) return;
-    const existingIds = new Set(STATE.entries.map(e => e.id));
-    const newEntries = sheetsEntries.filter(e => !existingIds.has(e.id));
-    if (newEntries.length > 0) {
-      // MERGE only — never remove existing local entries
-      STATE.entries = [...STATE.entries, ...newEntries];
-      STATE.entries.sort((a,b) => (a.date||'0000') < (b.date||'0000') ? -1 : 1);
-      STATE.settings.b1Base = 0;
-      STATE.settings.b2Base = 0;
-      save();
-      renderHome();
-      if (!silent) toast('✓ Synced ' + newEntries.length + ' new entries from Sheets');
-    }
+    // Always replace with Sheets data — single source of truth
+    STATE.entries = sheetsEntries;
+    STATE.entries.sort((a,b) => (a.date||'0000') < (b.date||'0000') ? -1 : 1);
+    STATE.settings.b1Base = 0;
+    STATE.settings.b2Base = 0;
+    save();
+    renderHome();
+    if (!silent) toast('✓ Synced ' + sheetsEntries.length + ' entries from Sheets');
   } catch(e) {}
 }
 
