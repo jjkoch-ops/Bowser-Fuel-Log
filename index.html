@@ -730,7 +730,7 @@ function renderHome() {
   const todayCount = STATE.entries.filter(e => e.date === today).length;
   document.getElementById('home-today').textContent = todayCount;
   document.getElementById('home-total').textContent = STATE.entries.length;
-  const recent = [...STATE.entries].reverse().slice(0, 5);
+  const recent = [...STATE.entries].sort((a,b) => (b.date||'0000') > (a.date||'0000') ? 1 : -1).slice(0, 5);
   document.getElementById('home-recent').innerHTML = recent.length
     ? recent.map(entryCard).join('')
     : '<div class="empty"><div class="empty-icon">⛽</div><div class="empty-text">No entries yet</div><div class="empty-sub">Tap New Fill to log your first entry</div></div>';
@@ -772,7 +772,7 @@ function renderDriverSelect() {
 function onBowserChange() {
   const b = document.getElementById('e-bowser').value;
   if (!b) return;
-  const last = [...STATE.entries].reverse().find(e => e.bowser === b);
+  const last = [...STATE.entries].sort((a,b) => (b.date||'0000') > (a.date||'0000') ? 1 : -1).find(e => e.bowser === b);
   if (last && last.meterEnd) {
     document.getElementById('e-start').value = last.meterEnd;
     document.getElementById('e-amount').value = '';
@@ -894,7 +894,7 @@ function setFilter(f, btn) {
 }
 
 function renderLog() {
-  let list = [...STATE.entries].reverse();
+  let list = [...STATE.entries].sort((a,b) => (b.date||'0000') > (a.date||'0000') ? 1 : -1);
   if (logFilter === 'B1') list = list.filter(e => e.bowser === 'B1');
   else if (logFilter === 'B2') list = list.filter(e => e.bowser === 'B2');
   else if (logFilter === 'incomplete') list = list.filter(e => !e.meterStart || !e.meterEnd);
