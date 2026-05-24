@@ -395,7 +395,8 @@
         <button class="btn btn-primary" style="margin-top:0" onclick="saveScriptUrl()">Save URL</button>
       </div>
       <button class="btn btn-secondary" style="width:100%;margin-top:10px" onclick="pullFromSheets()">🔄 Pull data from Google Sheets</button>
-      <p class="hint" style="margin-top:6px">Use this on a new device to load all existing entries from your Sheet.</p>
+      <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="cleanSheetDates()">🗓 Fix &amp; sort Sheet dates</button>
+      <p class="hint" style="margin-top:6px">Use Pull on a new device to load all entries. Use Fix dates to clean old date formats in your Sheet.</p>
     </div>
 
     <div class="card">
@@ -504,7 +505,43 @@
 
 <script>
 // ─── APPS SCRIPT CODE (shown in setup guide) ────────────────────────────────
-const APPS_SCRIPT_CODE = `function doPost(e) {
+const APPS_SCRIPT_CODE = `// Helper: convert any date value to YYYY-MM-DD string
+function toCleanDate(val) {
+  if (!val) return '';
+  if (val instanceof Date) {
+    var y = val.getFullYear();
+    var m = String(val.getMonth()+1).padStart(2,'0');
+    var d = String(val.getDate()).padStart(2,'0');
+    return y+'-'+m+'-'+d;
+  }
+  var s = String(val);
+  // Already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // Try parsing long format
+  try {
+    var dt = new Date(s);
+    if (!isNaN(dt)) {
+      var y = dt.getFullYear();
+      var m = String(dt.getMonth()+1).padStart(2,'0');
+      var d = String(dt.getDate()).padStart(2,'0');
+      return y+'-'+m+'-'+d;
+    }
+  } catch(e) {}
+  return s;
+}
+
+function setupSheet(sheet) {
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(['#','Date','Vehicle','Driver','Meter Start','Meter End',
+      'Amount (L)','Subtotal','Fuel Type','Bowser','Refuel (L)',
+      'Refuel Ref','Notes','Timestamp']);
+    sheet.getRange(1,1,1,14).setFontWeight('bold')
+      .setBackground('#1A3A2A').setFontColor('#FFFFFF');
+    sheet.setFrozenRows(1);
+  }
+}
+
+function doPost(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var data = JSON.parse(e.postData.contents);
   var action = data.action;
@@ -516,17 +553,10 @@ const APPS_SCRIPT_CODE = `function doPost(e) {
 
   if (action === 'addEntry') {
     var sheet = ss.getSheetByName('Fuel Log') || ss.insertSheet('Fuel Log');
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow(['#','Date','Vehicle','Driver','Meter Start','Meter End',
-        'Amount (L)','Subtotal','Fuel Type','Bowser','Refuel (L)',
-        'Refuel Ref','Notes','Timestamp']);
-      sheet.getRange(1,1,1,14).setFontWeight('bold')
-        .setBackground('#1A3A2A').setFontColor('#FFFFFF');
-      sheet.setFrozenRows(1);
-    }
+    setupSheet(sheet);
     var row = data.entry;
     var rowNum = sheet.getLastRow();
-    sheet.appendRow([rowNum, row.date, row.vehicle, row.driver,
+    sheet.appendRow([rowNum, toCleanDate(row.date), row.vehicle, row.driver,
       row.meterStart, row.meterEnd, row.amount, row.subtotal,
       row.fuelType, row.bowser, row.refuelLitres, row.refuelRef,
       row.notes, new Date().toISOString()]);
@@ -537,21 +567,44 @@ const APPS_SCRIPT_CODE = `function doPost(e) {
   if (action === 'syncAll') {
     var sheet = ss.getSheetByName('Fuel Log') || ss.insertSheet('Fuel Log');
     sheet.clearContents();
-    sheet.appendRow(['#','Date','Vehicle','Driver','Meter Start','Meter End',
-      'Amount (L)','Subtotal','Fuel Type','Bowser','Refuel (L)',
-      'Refuel Ref','Notes','Timestamp']);
-    sheet.getRange(1,1,1,14).setFontWeight('bold')
-      .setBackground('#1A3A2A').setFontColor('#FFFFFF');
-    sheet.setFrozenRows(1);
+    setupSheet(sheet);
     var entries = data.entries;
+    // Sort descending by date before writing
+    entries.sort(function(a,b) {
+      return (b.date||'0000') > (a.date||'0000') ? 1 : -1;
+    });
     for (var i = 0; i < entries.length; i++) {
       var r = entries[i];
-      sheet.appendRow([i+1, r.date, r.vehicle, r.driver,
+      sheet.appendRow([i+1, toCleanDate(r.date), r.vehicle, r.driver,
         r.meterStart, r.meterEnd, r.amount, r.subtotal,
         r.fuelType, r.bowser, r.refuelLitres, r.refuelRef,
         r.notes, r.savedAt || '']);
     }
     return ContentService.createTextOutput(JSON.stringify({status:'ok',count:entries.length}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (action === 'cleanDates') {
+    // Fix all existing dates in the sheet to YYYY-MM-DD format and sort descending
+    var sheet = ss.getSheetByName('Fuel Log');
+    if (!sheet || sheet.getLastRow() <= 1) {
+      return ContentService.createTextOutput(JSON.stringify({status:'ok',msg:'Nothing to clean'}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    var lastRow = sheet.getLastRow();
+    var dateCol = sheet.getRange(2, 2, lastRow - 1, 1).getValues();
+    for (var i = 0; i < dateCol.length; i++) {
+      var cleaned = toCleanDate(dateCol[i][0]);
+      dateCol[i][0] = cleaned;
+    }
+    sheet.getRange(2, 2, lastRow - 1, 1).setValues(dateCol);
+    // Sort by date descending (col 2), then by bowser (col 10)
+    sheet.getRange(2, 1, lastRow - 1, 14).sort({column: 2, ascending: false});
+    // Renumber # column
+    for (var i = 0; i < lastRow - 1; i++) {
+      sheet.getRange(i+2, 1).setValue(i+1);
+    }
+    return ContentService.createTextOutput(JSON.stringify({status:'ok',msg:'Dates cleaned and sorted'}))
       .setMimeType(ContentService.MimeType.JSON);
   }
 
@@ -570,7 +623,7 @@ function doGet(e) {
   var entries = rows.map(function(r, i) {
     return {
       id: 'sheet_' + (i + 1),
-      date: r[1] ? (r[1] instanceof Date ? r[1].toISOString().split('T')[0] : String(r[1])) : '',
+      date: toCleanDate(r[1]),
       vehicle: String(r[2] || ''),
       driver: String(r[3] || ''),
       meterStart: r[4] || '',
@@ -585,6 +638,10 @@ function doGet(e) {
       savedAt: String(r[13] || '')
     };
   }).filter(function(e) { return e.bowser === 'B1' || e.bowser === 'B2'; });
+  // Return sorted descending
+  entries.sort(function(a,b) {
+    return (b.date||'0000') > (a.date||'0000') ? 1 : -1;
+  });
   return ContentService.createTextOutput(JSON.stringify({status:'ok',entries:entries}))
     .setMimeType(ContentService.MimeType.JSON);
 }`;
@@ -1009,6 +1066,24 @@ async function testSync() {
 }
 
 // Pull from Sheets and REPLACE local data — Sheets is master
+async function cleanSheetDates() {
+  const url = STATE.settings.scriptUrl;
+  if (!url) { toast('No Sheets URL set', true); return; }
+  toast('Cleaning & sorting Sheet dates…');
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'cleanDates' }),
+      headers: { 'Content-Type': 'text/plain' }
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      toast('✓ Sheet dates fixed & sorted — pulling now…');
+      setTimeout(() => pullFromSheets(), 1500);
+    } else toast('Failed: ' + (data.msg || 'unknown error'), true);
+  } catch(err) { toast('Failed — ' + err.message, true); }
+}
+
 async function pullFromSheets() {
   const url = STATE.settings.scriptUrl;
   if (!url) { toast('No Apps Script URL set', true); return; }
@@ -1021,7 +1096,7 @@ async function pullFromSheets() {
     if (!sheetsEntries.length) { toast('No entries found in Sheet', true); return; }
     // Sheets is master — replace local with sheet data
     STATE.entries = sheetsEntries;
-    STATE.entries.sort((a,b) => (a.date||'0000') < (b.date||'0000') ? -1 : 1);
+    STATE.entries.sort((a,b) => (b.date||'0000') > (a.date||'0000') ? 1 : -1);
     STATE.settings.b1Base = 0;
     STATE.settings.b2Base = 0;
     save();
@@ -1143,7 +1218,7 @@ async function autoPullFromSheets(silent) {
     if (!sheetsEntries.length) return;
     // Always replace with Sheets data — single source of truth
     STATE.entries = sheetsEntries;
-    STATE.entries.sort((a,b) => (a.date||'0000') < (b.date||'0000') ? -1 : 1);
+    STATE.entries.sort((a,b) => (b.date||'0000') > (a.date||'0000') ? 1 : -1);
     STATE.settings.b1Base = 0;
     STATE.settings.b2Base = 0;
     save();
