@@ -772,9 +772,13 @@ function renderDriverSelect() {
 function onBowserChange() {
   const b = document.getElementById('e-bowser').value;
   if (!b) return;
-  const last = [...STATE.entries].sort((a,b) => (b.date||'0000') > (a.date||'0000') ? 1 : -1).find(e => e.bowser === b);
-  if (last && last.meterEnd) {
-    document.getElementById('e-start').value = last.meterEnd;
+  // Use highest meterEnd for this bowser — meters are cumulative so this is always the latest reading
+  const bowserEntries = STATE.entries.filter(e => e.bowser === b && e.meterEnd !== '' && !isNaN(parseFloat(e.meterEnd)));
+  if (!bowserEntries.length) return;
+  const last = bowserEntries.reduce((max, e) => parseFloat(e.meterEnd) > parseFloat(max.meterEnd) ? e : max, bowserEntries[0]);
+  if (last && last.meterEnd !== '') {
+    document.getElementById('e-start').value = parseFloat(last.meterEnd);
+    document.getElementById('e-end').value = '';
     document.getElementById('e-amount').value = '';
     document.getElementById('e-amount').classList.add('auto-field');
   }
