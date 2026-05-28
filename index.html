@@ -121,6 +121,11 @@
   .auto-field { background: var(--green-pale) !important; font-weight: 600; color: var(--green-dark) !important; }
   .hint { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
+  /* REFUEL MODE — blocks other sections */
+  .form-blocked { opacity: 0.35; pointer-events: none; user-select: none; transition: opacity 0.2s; }
+  .refuel-only-notice { display:none; background: var(--amber-pale); border: 1.5px solid #F0C060; border-radius: 8px; padding: 10px 13px; font-size: 13px; color: var(--amber); font-weight: 600; margin-bottom: 10px; }
+  .refuel-only-notice.show { display: block; }
+
   /* REFUEL TOGGLE */
   .refuel-box { background: var(--amber-pale); border: 1.5px solid #F0C060; border-radius: var(--radius); padding: 13px 14px; margin-bottom: 10px; }
   .toggle-row { display: flex; align-items: center; gap: 10px; cursor: pointer; }
@@ -288,6 +293,8 @@
       </div>
     </div>
 
+    <div id="block-vehicle-section">
+    <div class="refuel-only-notice" id="refuel-notice">⛽ Refuel mode — only Bowser &amp; Date required</div>
     <div class="form-section">Vehicle &amp; driver</div>
     <div class="form-row">
       <div class="form-group">
@@ -353,6 +360,8 @@
         <span class="hint">Optional cross-check</span>
       </div>
     </div>
+
+    </div><!-- end block-vehicle-section -->
 
     <div class="form-section">Bowser refuel</div>
     <div class="refuel-box">
@@ -848,7 +857,28 @@ function onManualAmount() {
 function toggleRefuel() {
   const on = document.getElementById('e-refuel-toggle').checked;
   document.getElementById('refuel-sub').style.display = on ? 'block' : 'none';
-  if (on) setRefuelQty('full');
+
+  // Block all other inputs except Bowser & Date when refuel is on
+  const blockSection = document.getElementById('block-vehicle-section');
+  const notice = document.getElementById('refuel-notice');
+  if (blockSection) blockSection.classList.toggle('form-blocked', on);
+  if (notice) notice.classList.toggle('show', on);
+
+  if (on) {
+    // Clear vehicle/driver/meter fields — not needed for a refuel-only entry
+    document.getElementById('e-vehicle').value = '';
+    document.getElementById('e-driver').value = '';
+    document.getElementById('e-start').value = '';
+    document.getElementById('e-end').value = '';
+    document.getElementById('e-amount').value = '';
+    document.getElementById('e-amount').classList.add('auto-field');
+    document.getElementById('e-subtotal').value = '';
+    document.getElementById('e-notes').value = '';
+    setRefuelQty('full');
+  } else {
+    // Restore bowser meter start when turning refuel off
+    onBowserChange();
+  }
 }
 
 function setRefuelQty(mode) {
@@ -885,9 +915,10 @@ function saveEntry() {
   const date = document.getElementById('e-date').value;
   let vehicle = document.getElementById('e-vehicle').value;
   if (vehicle === '__other') vehicle = document.getElementById('e-vehicle-other').value.trim();
+  const isRefuelOnly = document.getElementById('e-refuel-toggle').checked;
   if (!bowser) { toast('Please select a bowser', true); return; }
   if (!date) { toast('Please enter a date', true); return; }
-  if (!vehicle) { toast('Please select a vehicle', true); return; }
+  if (!isRefuelOnly && !vehicle) { toast('Please select a vehicle', true); return; }
 
   const meterStart = document.getElementById('e-start').value;
   const meterEnd = document.getElementById('e-end').value;
@@ -1008,6 +1039,10 @@ function renderSummary() {
   const { b1, b2 } = calcFuelLeft();
   const totalB1 = STATE.entries.filter(e => e.bowser === 'B1').reduce((s,e) => s + (parseFloat(e.amount)||0), 0);
   const totalB2 = STATE.entries.filter(e => e.bowser === 'B2').reduce((s,e) => s + (parseFloat(e.amount)||0), 0);
+  const totalDispensed = totalB1 + totalB2;
+  const totalRefuelled = STATE.entries.reduce((s,e) => s + (parseFloat(e.refuelLitres)||0), 0);
+
+  // By vehicle
   const vMap = {};
   STATE.entries.forEach(e => {
     if (!e.vehicle) return;
@@ -1015,25 +1050,51 @@ function renderSummary() {
     vMap[e.vehicle].fills++;
     vMap[e.vehicle].total += parseFloat(e.amount) || 0;
   });
-  const sorted = Object.entries(vMap).sort((a,b) => b[1].total - a[1].total);
+  const sortedV = Object.entries(vMap).sort((a,b) => b[1].total - a[1].total);
+
+  // By driver
+  const pMap = {};
+  STATE.entries.forEach(e => {
+    if (!e.driver) return;
+    if (!pMap[e.driver]) pMap[e.driver] = { fills: 0, total: 0 };
+    pMap[e.driver].fills++;
+    pMap[e.driver].total += parseFloat(e.amount) || 0;
+  });
+  const sortedP = Object.entries(pMap).sort((a,b) => b[1].total - a[1].total);
 
   document.getElementById('summary-content').innerHTML = `
     <div class="stats-grid">
-      <div class="stat-card"><div class="stat-label">B1 dispensed</div><div class="stat-val">${totalB1.toFixed(0)}</div><div class="stat-unit">L total</div></div>
-      <div class="stat-card"><div class="stat-label">B2 dispensed</div><div class="stat-val">${totalB2.toFixed(0)}</div><div class="stat-unit">L total</div></div>
+      <div class="stat-card b1"><div class="stat-label">B1 dispensed</div><div class="stat-val b1">${totalB1.toFixed(0)}</div><div class="stat-unit">L</div></div>
+      <div class="stat-card b2"><div class="stat-label">B2 dispensed</div><div class="stat-val b2">${totalB2.toFixed(0)}</div><div class="stat-unit">L</div></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card neutral"><div class="stat-label">Total dispensed</div><div class="stat-val">${totalDispensed.toFixed(0)}</div><div class="stat-unit">L all bowsers</div></div>
+      <div class="stat-card neutral"><div class="stat-label">Total refuelled</div><div class="stat-val">${totalRefuelled.toFixed(0)}</div><div class="stat-unit">L added</div></div>
     </div>
     <div class="card" style="margin-top:0">
       <div class="card-title">By vehicle</div>
       <table class="sum-table">
         <thead><tr><th>Vehicle</th><th>Fills</th><th>Total (L)</th><th>Avg (L)</th></tr></thead>
-        <tbody>${sorted.map(([v,d]) => `<tr>
+        <tbody>${sortedV.map(([v,d]) => `<tr>
           <td style="font-weight:700">${v}</td>
           <td>${d.fills}</td>
           <td style="font-weight:700">${d.total.toFixed(0)}</td>
           <td style="color:var(--text-muted)">${(d.total/d.fills).toFixed(1)}</td>
         </tr>`).join('')}</tbody>
       </table>
-    </div>`;
+    </div>
+    ${sortedP.length ? `<div class="card">
+      <div class="card-title">By driver</div>
+      <table class="sum-table">
+        <thead><tr><th>Driver</th><th>Fills</th><th>Total (L)</th><th>Avg (L)</th></tr></thead>
+        <tbody>${sortedP.map(([p,d]) => `<tr>
+          <td style="font-weight:700">${p}</td>
+          <td>${d.fills}</td>
+          <td style="font-weight:700">${d.total.toFixed(0)}</td>
+          <td style="color:var(--text-muted)">${(d.total/d.fills).toFixed(1)}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>` : ''}`;
 }
 
 // ─── SETTINGS ─────────────────────────────────────────────────────────────────
