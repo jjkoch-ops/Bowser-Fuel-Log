@@ -727,6 +727,11 @@ if (!STATE.settings) STATE.settings = {};
 STATE.settings.scriptUrl = HARDCODED_URL;
 STATE.settings.b1Base = 0;
 STATE.settings.b2Base = 0;
+// Always ensure hardcoded drivers are in the list
+const HARDCODED_DRIVERS = ['Willem','Sipho','Johan','Thabo','Andre','Learnmore','JJ'];
+HARDCODED_DRIVERS.forEach(d => {
+  if (!STATE.drivers.includes(d)) STATE.drivers.push(d);
+});
 save();
 let logFilter = 'all';
 
