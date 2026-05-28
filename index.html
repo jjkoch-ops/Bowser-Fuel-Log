@@ -312,12 +312,9 @@
         </select>
       </div>
       <div class="form-group">
-        <label>Refueler</label>
-        <select id="e-driver">
+        <label>Driver / Refueler</label>
+        <select id="e-driver" onchange="onDriverChange()">
           <option value="">Select…</option>
-          <option>Learnmore</option>
-          <option>JJ</option>
-          <option value="__other">Other…</option>
         </select>
       </div>
     </div>
@@ -325,6 +322,12 @@
       <div class="form-group">
         <label>Vehicle name</label>
         <input type="text" id="e-vehicle-other" placeholder="Enter vehicle name">
+      </div>
+    </div>
+    <div class="form-row single" id="other-driver-row" style="display:none">
+      <div class="form-group">
+        <label>Driver / Refueler name</label>
+        <input type="text" id="e-driver-other" placeholder="Enter name">
       </div>
     </div>
     <div class="form-row">
@@ -820,8 +823,9 @@ function initForm() {
 function renderDriverSelect() {
   const sel = document.getElementById('e-driver');
   const cur = sel.value;
-  sel.innerHTML = '<option value="">Select driver…</option>' +
-    STATE.drivers.map(d => `<option${d === cur ? ' selected' : ''}>${d}</option>`).join('');
+  sel.innerHTML = '<option value="">Select…</option>' +
+    STATE.drivers.map(d => `<option${d === cur ? ' selected' : ''}>${d}</option>`).join('') +
+    '<option value="__other">Other…</option>';
 }
 
 function onBowserChange() {
@@ -842,6 +846,11 @@ function onBowserChange() {
 function onVehicleChange() {
   const v = document.getElementById('e-vehicle').value;
   document.getElementById('other-vehicle-row').style.display = v === '__other' ? 'block' : 'none';
+}
+
+function onDriverChange() {
+  const d = document.getElementById('e-driver').value;
+  document.getElementById('other-driver-row').style.display = d === '__other' ? 'block' : 'none';
 }
 
 function calcAmount() {
@@ -931,7 +940,9 @@ function saveEntry() {
   const entry = {
     id: uid(),
     bowser, date, vehicle,
-    driver: document.getElementById('e-driver').value,
+    driver: (document.getElementById('e-driver').value === '__other'
+      ? document.getElementById('e-driver-other').value.trim()
+      : document.getElementById('e-driver').value),
     meterStart: meterStart ? parseFloat(meterStart) : '',
     meterEnd: meterEnd ? parseFloat(meterEnd) : '',
     amount: amount ? parseFloat(amount) : '',
@@ -955,7 +966,7 @@ function saveEntry() {
 
 function clearEntryForm() {
   ['e-bowser','e-vehicle','e-driver'].forEach(id => document.getElementById(id).value = '');
-  ['e-start','e-end','e-amount','e-subtotal','e-notes','e-refuel-litres','e-refuel-ref','e-vehicle-other'].forEach(id => document.getElementById(id).value = '');
+  ['e-start','e-end','e-amount','e-subtotal','e-notes','e-refuel-litres','e-refuel-ref','e-vehicle-other','e-driver-other'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('e-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('e-refuel-toggle').checked = false;
   document.getElementById('refuel-sub').style.display = 'none';
@@ -963,6 +974,7 @@ function clearEntryForm() {
   document.getElementById('e-refuel-litres').classList.remove('auto-field');
   ['rbtn-full','rbtn-half','rbtn-custom'].forEach(id => document.getElementById(id).classList.remove('active'));
   document.getElementById('other-vehicle-row').style.display = 'none';
+  document.getElementById('other-driver-row').style.display = 'none';
   document.getElementById('e-amount').classList.add('auto-field');
 }
 
